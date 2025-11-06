@@ -24,7 +24,8 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
   const [newExpense, setNewExpense] = useState({
     category: '',
     description: '',
-    amount: 0
+    amount: 0,
+    memo: ''
   })
 
   // モーダル用state
@@ -208,7 +209,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
   const addExpense = () => {
     if (newExpense.category && newExpense.description && newExpense.amount > 0) {
       setExpenses([...expenses, { ...newExpense }])
-      setNewExpense({ category: '', description: '', amount: 0 })
+      setNewExpense({ category: '', description: '', amount: 0, memo: '' })
     }
   }
 
@@ -675,7 +676,22 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                 min="0"
               />
             </div>
+          </div>
 
+          <div className="form-row">
+            <div className="form-field full-width">
+              <label>メモ（任意）</label>
+              <textarea
+                value={newExpense.memo}
+                onChange={(e) => setNewExpense({ ...newExpense, memo: e.target.value })}
+                placeholder="例: どんなものを作成するか、どんな内容で実施するか、見積書の取得状況など"
+                rows={3}
+              />
+              <small>※補助金申請の際に参考になる詳細情報を記入できます</small>
+            </div>
+          </div>
+
+          <div className="form-actions">
             <button
               type="button"
               onClick={addExpense}
@@ -702,6 +718,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                   <th>分類</th>
                   <th>内容</th>
                   <th>金額</th>
+                  <th>メモ</th>
                   <th>操作</th>
                 </tr>
               </thead>
@@ -712,6 +729,15 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                     <td><span className="category-badge">{exp.category}</span></td>
                     <td>{exp.description}</td>
                     <td className="amount">¥{exp.amount.toLocaleString()}</td>
+                    <td className="memo-cell">
+                      {exp.memo ? (
+                        <div className="memo-content" title={exp.memo}>
+                          {exp.memo}
+                        </div>
+                      ) : (
+                        <span className="no-memo">-</span>
+                      )}
+                    </td>
                     <td>
                       <button
                         onClick={() => removeExpense(index)}
@@ -1203,19 +1229,23 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                   <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
                     <thead>
                       <tr style={{ background: '#667eea', color: 'white' }}>
-                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>No.</th>
-                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>経費区分</th>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left', width: '40px' }}>No.</th>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left', width: '120px' }}>経費区分</th>
                         <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>内容</th>
-                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>金額（円）</th>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right', width: '100px' }}>金額（円）</th>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>メモ</th>
                       </tr>
                     </thead>
                     <tbody>
                       {expenses.map((exp, index) => (
                         <tr key={index} style={{ background: index % 2 === 0 ? '#f7fafc' : 'white' }}>
                           <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{index + 1}</td>
-                          <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.category}</td>
-                          <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.description}</td>
-                          <td style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>¥{exp.amount.toLocaleString()}</td>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0', fontSize: '12px' }}>{exp.category}</td>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }}>{exp.description}</td>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right', fontSize: '13px' }}>¥{exp.amount.toLocaleString()}</td>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0', fontSize: '11px', color: '#4a5568' }}>
+                            {exp.memo || '-'}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1401,19 +1431,23 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
           <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
             <thead>
               <tr style={{ background: '#667eea', color: 'white' }}>
-                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>No.</th>
-                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>経費区分</th>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left', width: '40px' }}>No.</th>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left', width: '120px' }}>経費区分</th>
                 <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>内容</th>
-                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>金額（円）</th>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right', width: '100px' }}>金額（円）</th>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>メモ</th>
               </tr>
             </thead>
             <tbody>
               {expenses.map((exp, index) => (
                 <tr key={index} style={{ background: index % 2 === 0 ? '#f7fafc' : 'white' }}>
                   <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{index + 1}</td>
-                  <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.category}</td>
-                  <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.description}</td>
-                  <td style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>¥{exp.amount.toLocaleString()}</td>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0', fontSize: '12px' }}>{exp.category}</td>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0', fontSize: '13px' }}>{exp.description}</td>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right', fontSize: '13px' }}>¥{exp.amount.toLocaleString()}</td>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0', fontSize: '11px', color: '#4a5568' }}>
+                    {exp.memo || '-'}
+                  </td>
                 </tr>
               ))}
             </tbody>

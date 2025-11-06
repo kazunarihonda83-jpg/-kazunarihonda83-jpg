@@ -2,6 +2,7 @@ export interface ExpenseItem {
   category: string
   description: string
   amount: number
+  memo?: string
 }
 
 export interface SalesItem {

@@ -1,16 +1,44 @@
-import { useState } from 'react'
-import { FileText } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { FileText, LogOut } from 'lucide-react'
 import './App.css'
 import ExpensePlanner from './components/ExpensePlanner'
+import Login from './components/Login'
 import type { ExpenseItem } from './types/BusinessPlan'
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [username, setUsername] = useState('')
   const [isCompleted, setIsCompleted] = useState(false)
   const [expenseData, setExpenseData] = useState<{
     expenses: ExpenseItem[]
     totalExpense: number
     subsidyInfo: any
   } | null>(null)
+
+  // ログイン状態をチェック
+  useEffect(() => {
+    const loggedIn = localStorage.getItem('isLoggedIn') === 'true'
+    const storedUsername = localStorage.getItem('username') || ''
+    if (loggedIn && storedUsername) {
+      setIsLoggedIn(true)
+      setUsername(storedUsername)
+    }
+  }, [])
+
+  const handleLogin = (user: string) => {
+    setIsLoggedIn(true)
+    setUsername(user)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn')
+    localStorage.removeItem('username')
+    localStorage.removeItem('loginTime')
+    setIsLoggedIn(false)
+    setUsername('')
+    setIsCompleted(false)
+    setExpenseData(null)
+  }
 
   const handleComplete = (expenses: ExpenseItem[], totalExpense: number, subsidyInfo: any) => {
     setExpenseData({ expenses, totalExpense, subsidyInfo })
@@ -22,6 +50,11 @@ function App() {
     setExpenseData(null)
   }
 
+  // ログインしていない場合はログイン画面を表示
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />
+  }
+
   return (
     <div className="app-container">
       <header className="app-header">
@@ -29,6 +62,13 @@ function App() {
           <FileText size={32} />
           <h1>補助金経費項目プランナー</h1>
           <p>小規模事業者持続化補助金 - 経費計画サポートツール</p>
+        </div>
+        <div className="header-user">
+          <span className="username">👤 {username}</span>
+          <button onClick={handleLogout} className="btn-logout">
+            <LogOut size={18} />
+            ログアウト
+          </button>
         </div>
       </header>
 

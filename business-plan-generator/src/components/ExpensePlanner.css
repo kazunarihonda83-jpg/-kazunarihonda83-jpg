@@ -321,19 +321,44 @@
 }
 
 .form-field input,
-.form-field select {
+.form-field select,
+.form-field textarea {
   width: 100%;
   padding: 0.75rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s;
+  font-family: inherit;
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
 .form-field input:focus,
-.form-field select:focus {
+.form-field select:focus,
+.form-field textarea:focus {
   outline: none;
   border-color: #10b981;
+}
+
+.form-field small {
+  display: block;
+  margin-top: 0.375rem;
+  color: #718096;
+  font-size: 0.8rem;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
 }
 
 .btn-add-expense {
@@ -416,6 +441,27 @@
   font-weight: 600;
   color: #2d3748;
   font-size: 1.05rem;
+}
+
+.memo-cell {
+  max-width: 300px;
+}
+
+.memo-content {
+  font-size: 0.875rem;
+  color: #4a5568;
+  line-height: 1.5;
+  max-height: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.no-memo {
+  color: #cbd5e0;
+  font-style: italic;
 }
 
 .expense-table tfoot tr {

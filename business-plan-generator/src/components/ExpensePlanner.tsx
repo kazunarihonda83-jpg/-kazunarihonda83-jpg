@@ -29,6 +29,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
 
   // モーダル用state
   const [selectedCategoryForDetail, setSelectedCategoryForDetail] = useState<string | null>(null)
+  const [showPdfPreview, setShowPdfPreview] = useState(false)
   
   // スケジュール管理用state
   const [applicationDeadline, setApplicationDeadline] = useState('')
@@ -235,11 +236,15 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
     const websiteFees = expenses.filter(exp => exp.category === 'ウェブサイト関連費')
     const websiteFeeTotal = websiteFees.reduce((sum, exp) => sum + exp.amount, 0)
     const totalExpense = expenses.reduce((sum, exp) => sum + exp.amount, 0)
-    const limit = totalExpense * 0.25
+    const quarterLimit = totalExpense * 0.25
+    const absoluteLimit = 500000
+    const limit = Math.min(quarterLimit, absoluteLimit)
     
     return {
       websiteFeeTotal,
       limit,
+      quarterLimit,
+      absoluteLimit,
       isOver: websiteFeeTotal > limit,
       percentage: totalExpense > 0 ? Math.round((websiteFeeTotal / totalExpense) * 100) : 0
     }
@@ -247,6 +252,23 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
 
   // PDF出力用のref
   const pdfContentRef = useRef<HTMLDivElement>(null)
+
+  // 必要書類を取得する関数
+  const getRequiredDocuments = () => {
+    // 通常枠・創業枠・賃金引上げ枠の判定
+    const isWageIncrease = applicationCategory === 'wage-increase'
+    const hasInvoice = isInvoiceEligible
+    
+    return {
+      isWageIncrease,
+      hasInvoice
+    }
+  }
+
+  // PDFプレビュー表示
+  const showPDFPreview = () => {
+    setShowPdfPreview(true)
+  }
 
   // PDF出力
   const downloadPDF = async () => {
@@ -348,6 +370,9 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
         <div className="header-actions">
           <button onClick={saveToLocalStorage} className="btn-save">
             <Save size={18} /> 下書き保存
+          </button>
+          <button onClick={showPDFPreview} className="btn-preview" disabled={expenses.length === 0}>
+            <Info size={18} /> PDFプレビュー
           </button>
           <button onClick={downloadPDF} className="btn-download" disabled={expenses.length === 0}>
             <Download size={18} /> PDF出力
@@ -812,16 +837,129 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
             </div>
 
             <div className="schedule-todos">
-              <h3>📝 申請準備チェックリスト</h3>
-              <ul className="todo-list">
-                <li>✅ 経営計画書の作成（様式2）</li>
-                <li>✅ 補助事業計画書の作成（様式3）</li>
-                <li>✅ 経費明細表の作成（様式4）</li>
-                <li>✅ 見積書の取得（全ての経費項目）</li>
-                <li>✅ 事業要件の確認（販路開拓に該当するか）</li>
-                <li>✅ 必要書類の準備（登記簿謄本など）</li>
-                <li>✅ 電子申請システムの利用登録</li>
-              </ul>
+              <h3>📝 必要書類リスト</h3>
+              {(() => {
+                const { isWageIncrease, hasInvoice } = getRequiredDocuments()
+                
+                return (
+                  <div className="document-sections">
+                    {/* 通常枠の書類 */}
+                    <div className="document-section">
+                      <h4>■ 通常枠の必要書類</h4>
+                      
+                      <div className="document-category">
+                        <h5>＜法人＞</h5>
+                        <div className="document-case">
+                          <strong>1期目未満／gBizあり</strong>
+                          <ul>
+                            <li>開業後から現在までの売上台帳（様式任意）</li>
+                            <li>現在事項全部証明書または履歴事項全部証明書（申請書提出日から3か月以内・原本）</li>
+                          </ul>
+                        </div>
+                        <div className="document-case">
+                          <strong>1期目未満／gBizなし</strong>
+                          <ul>
+                            <li>上記書類に加え、法人印鑑証明書（gBiz ID作成用）</li>
+                            <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                          </ul>
+                        </div>
+                        <div className="document-case">
+                          <strong>2期目以降／gBizあり</strong>
+                          <ul>
+                            <li>直近1期分の損益計算書および貸借対照表</li>
+                          </ul>
+                        </div>
+                        <div className="document-case">
+                          <strong>2期目以降／gBizなし</strong>
+                          <ul>
+                            <li>上記書類に加え、法人印鑑証明書（gBiz ID作成用）</li>
+                            <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="document-category">
+                        <h5>＜個人事業主＞</h5>
+                        <div className="document-case">
+                          <strong>1期目未満／gBizあり</strong>
+                          <ul>
+                            <li>開業後から現在までの売上台帳（様式任意）</li>
+                          </ul>
+                        </div>
+                        <div className="document-case">
+                          <strong>1期目未満／gBizなし</strong>
+                          <ul>
+                            <li>売上台帳に加え、代表者個人の印鑑証明書（gBiz ID作成用）</li>
+                            <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                          </ul>
+                        </div>
+                        <div className="document-case">
+                          <strong>2期目以降／gBizあり</strong>
+                          <ul>
+                            <li>令和6年度分の確定申告書および青色（または白色）申告決算書</li>
+                          </ul>
+                        </div>
+                        <div className="document-case">
+                          <strong>2期目以降／gBizなし</strong>
+                          <ul>
+                            <li>上記書類に加え、代表者個人の印鑑証明書</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* インボイス枠の追加書類 */}
+                    {hasInvoice && (
+                      <div className="document-section invoice">
+                        <h4>■ インボイス枠 追加書類</h4>
+                        <div className="document-category">
+                          <ul>
+                            <li>インボイス番号登録通知書（既に取得済みの場合）</li>
+                            <li>※法人・個人事業主共通</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 賃金引上げ枠の追加書類 */}
+                    {isWageIncrease && (
+                      <div className="document-section wage">
+                        <h4>■ 賃金引上げ枠 追加書類</h4>
+                        <div className="document-category">
+                          <h5>＜法人＞</h5>
+                          <ul>
+                            <li>従業員全員分の賃金台帳および雇用契約書</li>
+                            <li>（当社で作成代行も可能です）</li>
+                            <li>赤字事業者の場合：直近1期分の法人税申告書（別表一・別表四）</li>
+                          </ul>
+                        </div>
+                        <div className="document-category">
+                          <h5>＜個人事業主＞</h5>
+                          <ul>
+                            <li>従業員全員分の賃金台帳および雇用契約書</li>
+                            <li>（当社で作成代行も可能です）</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 最大枠の場合 */}
+                    {hasInvoice && isWageIncrease && (
+                      <div className="document-section maximum">
+                        <h4>■ 最大枠（インボイス＆賃金引上げ）</h4>
+                        <div className="document-category">
+                          <ul>
+                            <li>インボイス枠・賃金引上げ枠それぞれの書類をすべてご用意ください</li>
+                            <li>売上台帳、賃金台帳、雇用契約書、インボイス番号登録通知書</li>
+                            <li>該当する場合：法人印鑑証明書または代表個人印鑑証明書</li>
+                            <li>赤字事業者：法人税申告書（別表一・別表四）</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
 
             <div className="schedule-reminders">
@@ -934,6 +1072,111 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
           </div>
         )
       })()}
+
+      {/* PDFプレビューモーダル */}
+      {showPdfPreview && (
+        <div className="modal-overlay" onClick={() => setShowPdfPreview(false)}>
+          <div className="modal-content pdf-preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📄 PDF プレビュー</h2>
+              <button className="modal-close" onClick={() => setShowPdfPreview(false)}>✕</button>
+            </div>
+            
+            <div className="modal-body pdf-preview-body">
+              <div className="pdf-preview-content">
+                <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '3px solid #667eea', paddingBottom: '20px' }}>
+                  <h1 style={{ fontSize: '24px', color: '#667eea', marginBottom: '10px' }}>小規模事業者持続化補助金</h1>
+                  <h2 style={{ fontSize: '20px', color: '#4a5568' }}>経費計画書</h2>
+                </div>
+
+                <div style={{ marginBottom: '25px', padding: '20px', background: '#edf2f7', borderRadius: '8px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>基本情報</h3>
+                  <p style={{ marginBottom: '8px', fontSize: '14px' }}><strong>事業者名:</strong> {businessName || '未入力'}</p>
+                  <p style={{ marginBottom: '8px', fontSize: '14px' }}>
+                    <strong>申請枠:</strong> {
+                      applicationCategory === 'normal' ? '通常枠（上限50万円）' :
+                      applicationCategory === 'startup' ? '創業枠（上限200万円）' :
+                      '賃金引上げ枠（上限200万円）'
+                    }
+                  </p>
+                  <p style={{ fontSize: '14px' }}><strong>インボイス特例:</strong> {isInvoiceEligible ? '対象（+50万円）' : '対象外'}</p>
+                </div>
+
+                <div style={{ marginBottom: '25px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>経費明細一覧</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
+                    <thead>
+                      <tr style={{ background: '#667eea', color: 'white' }}>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>No.</th>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>経費区分</th>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>内容</th>
+                        <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>金額（円）</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expenses.map((exp, index) => (
+                        <tr key={index} style={{ background: index % 2 === 0 ? '#f7fafc' : 'white' }}>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{index + 1}</td>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.category}</td>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.description}</td>
+                          <td style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>¥{exp.amount.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {(() => {
+                  const check = checkWebsiteFeeLimit()
+                  return check.websiteFeeTotal > 0 && (
+                    <div style={{ marginBottom: '25px', padding: '15px', background: check.isOver ? '#fee2e2' : '#d1fae5', borderRadius: '8px', border: check.isOver ? '2px solid #ef4444' : '2px solid #10b981' }}>
+                      <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ウェブサイト関連費チェック</h3>
+                      <p style={{ fontSize: '13px', marginBottom: '5px' }}>ウェブサイト関連費合計: ¥{check.websiteFeeTotal.toLocaleString()} ({check.percentage}%)</p>
+                      <p style={{ fontSize: '13px', color: check.isOver ? '#991b1b' : '#065f46' }}>
+                        {check.isOver ? `⚠️ 警告: 上限を超えています（上限: ¥${Math.floor(check.limit).toLocaleString()}）` : `✓ 上限内です（上限: ¥${Math.floor(check.limit).toLocaleString()}）`}
+                      </p>
+                    </div>
+                  )
+                })()}
+
+                <div style={{ padding: '20px', background: '#edf2f7', borderRadius: '8px', marginBottom: '25px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>補助金シミュレーション</h3>
+                  <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>申請総額:</span>
+                    <span style={{ fontWeight: 'bold' }}>¥{subsidyInfo.totalExpense.toLocaleString()}</span>
+                  </div>
+                  <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>補助率:</span>
+                    <span style={{ fontWeight: 'bold' }}>{Math.round(subsidyInfo.subsidyRate * 100)}%</span>
+                  </div>
+                  <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: '2px solid #cbd5e0' }}>
+                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>予想受給額:</span>
+                    <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>¥{subsidyInfo.expectedSubsidy.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>自己負担額:</span>
+                    <span style={{ fontWeight: 'bold' }}>¥{subsidyInfo.selfPayment.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '11px', color: '#718096', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+                  <p style={{ marginBottom: '5px' }}>※この書類はシミュレーション結果です。実際の補助金額は審査により決定されます。</p>
+                  <p>作成日時: {new Date().toLocaleString('ja-JP')}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="btn-modal-action" onClick={downloadPDF}>
+                <Download size={18} /> PDFダウンロード
+              </button>
+              <button className="btn-modal-close" onClick={() => setShowPdfPreview(false)}>
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PDF出力用の非表示コンテンツ */}
       <div ref={pdfContentRef} style={{ position: 'absolute', left: '-9999px', width: '800px', background: 'white', padding: '40px' }}>

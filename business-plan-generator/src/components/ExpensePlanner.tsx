@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, Calculator, Lightbulb, TrendingUp, DollarSign, Download, Save, Info, AlertTriangle, Calendar } from 'lucide-react'
 import type { ExpenseItem } from '../types/BusinessPlan'
 import { expenseCategories } from '../types/BusinessPlan'
 import { expenseCategoryDetails } from '../types/ExpenseDetails'
 import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 import './ExpensePlanner.css'
 
 interface ExpensePlannerProps {
@@ -111,7 +112,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       name: '通常枠プラン',
       description: '上限50万円の標準的なプラン',
       items: [
-        { category: '広報費', description: 'LP作成（1個）', amount: 187500, note: '※税別：187,500円' },
+        { category: 'ウェブサイト関連費', description: 'LP作成（1個）', amount: 187500, note: '※税別：187,500円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 300000, note: '※税別：300,000円' },
         { category: '広報費', description: 'DM発送（1,750部）', amount: 262500, note: '※税別：262,500円' }
       ],
@@ -126,7 +127,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       items: [
         { category: '広報費', description: 'メニュー表作成（1個）', amount: 260000, note: '※税別：260,000円' },
         { category: '広報費', description: 'チラシ制作（2個）', amount: 200000, note: '※税別：200,000円' },
-        { category: '広報費', description: 'LP作成（1個）', amount: 375000, note: '※税別：375,000円' },
+        { category: 'ウェブサイト関連費', description: 'LP作成（1個）', amount: 375000, note: '※税別：375,000円' },
         { category: '広報費', description: 'DM発送（5,000部）', amount: 750000, note: '※税別：750,000円' }
       ],
       subtotal: 1585000,
@@ -140,7 +141,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       items: [
         { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
-        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: 'ウェブサイト関連費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
         { category: '広報費', description: 'DM発送（10,000部）', amount: 1500000, note: '※税別：1,500,000円' }
       ],
       subtotal: 3000000,
@@ -154,7 +155,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       items: [
         { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
-        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: 'ウェブサイト関連費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
         { category: '広報費', description: 'DM発送（15,000部）', amount: 2250000, note: '※税別：2,250,000円' }
       ],
       subtotal: 3750000,
@@ -168,7 +169,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       items: [
         { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
-        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: 'ウェブサイト関連費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
         { category: '広報費', description: 'DM発送（10,000部）', amount: 1500000, note: '※税別：1,500,000円' }
       ],
       subtotal: 3000000,
@@ -182,7 +183,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       items: [
         { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
-        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: 'ウェブサイト関連費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
         { category: '広報費', description: 'DM発送（15,000部）', amount: 2250000, note: '※税別：2,250,000円' }
       ],
       subtotal: 3750000,
@@ -244,185 +245,55 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
     }
   }
 
+  // PDF出力用のref
+  const pdfContentRef = useRef<HTMLDivElement>(null)
+
   // PDF出力
-  const downloadPDF = () => {
-    const doc = new jsPDF()
-    const subsidyInfo = calculateSubsidy()
-    const websiteFeeCheck = checkWebsiteFeeLimit()
-    
-    let y = 20
-    const pageWidth = doc.internal.pageSize.getWidth()
-    const margin = 20
-    const contentWidth = pageWidth - (margin * 2)
-    
-    // ヘッダー背景
-    doc.setFillColor(102, 126, 234)
-    doc.rect(0, 0, pageWidth, 35, 'F')
-    
-    // タイトル
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(20)
-    doc.text('小規模事業者持続化補助金', pageWidth / 2, 15, { align: 'center' })
-    doc.setFontSize(16)
-    doc.text('経費計画書', pageWidth / 2, 27, { align: 'center' })
-    
-    y = 45
-    doc.setTextColor(0, 0, 0)
-    
-    // 基本情報セクション
-    doc.setFillColor(237, 242, 247)
-    doc.rect(margin, y, contentWidth, 35, 'F')
-    
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.text('基本情報', margin + 5, y + 8)
-    
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`事業者名: ${businessName || '未入力'}`, margin + 5, y + 18)
-    
-    const categoryMap = {
-      'normal': '通常枠（上限50万円）',
-      'startup': '創業枠（上限200万円）',
-      'wage-increase': '賃金引上げ枠（上限200万円）'
+  const downloadPDF = async () => {
+    if (!pdfContentRef.current) {
+      alert('PDF生成エラー: コンテンツが見つかりません')
+      return
     }
-    doc.text(`申請枠: ${categoryMap[applicationCategory]}`, margin + 5, y + 26)
-    doc.text(`インボイス特例: ${isInvoiceEligible ? '対象（+50万円）' : '対象外'}`, margin + 5, y + 34)
-    
-    y += 45
-    
-    // 経費一覧セクション
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    doc.text('経費明細一覧', margin, y)
-    y += 8
-    
-    // テーブルヘッダー
-    doc.setFillColor(102, 126, 234)
-    doc.rect(margin, y, contentWidth, 8, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'bold')
-    doc.text('No.', margin + 3, y + 6)
-    doc.text('経費区分', margin + 15, y + 6)
-    doc.text('内容', margin + 55, y + 6)
-    doc.text('金額（円）', margin + contentWidth - 35, y + 6)
-    
-    y += 10
-    doc.setTextColor(0, 0, 0)
-    doc.setFont('helvetica', 'normal')
-    
-    // 経費項目
-    expenses.forEach((exp, index) => {
-      if (y > 260) {
-        doc.addPage()
-        y = 20
-      }
+
+    try {
+      // ローディング表示
+      alert('PDF生成中です。しばらくお待ちください...')
       
-      // 行背景（交互）
-      if (index % 2 === 0) {
-        doc.setFillColor(249, 250, 251)
-        doc.rect(margin, y - 2, contentWidth, 14, 'F')
-      }
+      // HTML要素をCanvasに変換
+      const canvas = await html2canvas(pdfContentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      })
+
+      // CanvasからPDFを生成
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      })
+
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
+      const imgX = (pdfWidth - imgWidth * ratio) / 2
+      const imgY = 0
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio)
       
-      doc.setFontSize(9)
-      doc.text(`${index + 1}`, margin + 3, y + 4)
-      doc.text(exp.category, margin + 15, y + 4, { maxWidth: 35 })
-      doc.text(exp.description, margin + 55, y + 4, { maxWidth: 75 })
-      doc.text(`¥${exp.amount.toLocaleString()}`, margin + contentWidth - 35, y + 4)
+      // ファイル名生成
+      const fileName = `補助金経費計画書_${businessName || '下書き'}_${new Date().toLocaleDateString('ja-JP').replace(/\//g, '')}.pdf`
+      pdf.save(fileName)
       
-      y += 14
-    })
-    
-    y += 5
-    
-    // ウェブサイト関連費チェック
-    if (websiteFeeCheck.websiteFeeTotal > 0) {
-      if (y > 240) {
-        doc.addPage()
-        y = 20
-      }
-      
-      doc.setFillColor(254, 243, 199)
-      if (websiteFeeCheck.isOver) {
-        doc.setFillColor(254, 226, 226)
-      }
-      doc.rect(margin, y, contentWidth, 20, 'F')
-      
-      doc.setFontSize(11)
-      doc.setFont('helvetica', 'bold')
-      doc.text('ウェブサイト関連費チェック', margin + 5, y + 7)
-      
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'normal')
-      doc.text(`ウェブサイト関連費合計: ¥${websiteFeeCheck.websiteFeeTotal.toLocaleString()} (${websiteFeeCheck.percentage}%)`, margin + 5, y + 14)
-      
-      if (websiteFeeCheck.isOver) {
-        doc.setTextColor(153, 27, 27)
-        doc.text(`警告: 上限を超えています（上限: ¥${Math.floor(websiteFeeCheck.limit).toLocaleString()}）`, margin + 5, y + 19)
-      } else {
-        doc.setTextColor(6, 95, 70)
-        doc.text(`上限内です（上限: ¥${Math.floor(websiteFeeCheck.limit).toLocaleString()}）`, margin + 5, y + 19)
-      }
-      doc.setTextColor(0, 0, 0)
-      
-      y += 25
+      alert('📄 PDFをダウンロードしました！')
+    } catch (error) {
+      console.error('PDF generation error:', error)
+      alert('PDF生成中にエラーが発生しました。もう一度お試しください。')
     }
-    
-    // 合計セクション
-    if (y > 220) {
-      doc.addPage()
-      y = 20
-    }
-    
-    doc.setFillColor(237, 242, 247)
-    doc.rect(margin, y, contentWidth, 40, 'F')
-    
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('補助金シミュレーション', margin + 5, y + 8)
-    
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    doc.text('申請総額:', margin + 5, y + 18)
-    doc.text(`¥${subsidyInfo.totalExpense.toLocaleString()}`, margin + 80, y + 18)
-    
-    doc.text('補助率:', margin + 5, y + 26)
-    doc.text(`${Math.round(subsidyInfo.subsidyRate * 100)}%`, margin + 80, y + 26)
-    
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(12)
-    doc.text('予想受給額:', margin + 5, y + 34)
-    doc.setTextColor(102, 126, 234)
-    doc.text(`¥${subsidyInfo.expectedSubsidy.toLocaleString()}`, margin + 80, y + 34)
-    
-    doc.setTextColor(0, 0, 0)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(11)
-    
-    y += 45
-    
-    doc.text('自己負担額:', margin + 5, y)
-    doc.text(`¥${subsidyInfo.selfPayment.toLocaleString()}`, margin + 80, y)
-    
-    // フッター
-    y += 15
-    doc.setFontSize(8)
-    doc.setTextColor(128, 128, 128)
-    doc.text('※この書類はシミュレーション結果です。実際の補助金額は審査により決定されます。', margin, y)
-    doc.text(`作成日時: ${new Date().toLocaleString('ja-JP')}`, margin, y + 5)
-    
-    // ページ番号
-    const pageCount = doc.getNumberOfPages()
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i)
-      doc.setFontSize(8)
-      doc.setTextColor(128, 128, 128)
-      doc.text(`${i} / ${pageCount}`, pageWidth - margin, doc.internal.pageSize.getHeight() - 10, { align: 'right' })
-    }
-    
-    doc.save(`補助金経費計画書_${businessName || '下書き'}_${new Date().toLocaleDateString('ja-JP').replace(/\//g, '')}.pdf`)
-    alert('📄 PDFをダウンロードしました！')
   }
 
   // プリセットプランを適用
@@ -1063,6 +934,89 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
           </div>
         )
       })()}
+
+      {/* PDF出力用の非表示コンテンツ */}
+      <div ref={pdfContentRef} style={{ position: 'absolute', left: '-9999px', width: '800px', background: 'white', padding: '40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px', borderBottom: '3px solid #667eea', paddingBottom: '20px' }}>
+          <h1 style={{ fontSize: '24px', color: '#667eea', marginBottom: '10px' }}>小規模事業者持続化補助金</h1>
+          <h2 style={{ fontSize: '20px', color: '#4a5568' }}>経費計画書</h2>
+        </div>
+
+        <div style={{ marginBottom: '25px', padding: '20px', background: '#edf2f7', borderRadius: '8px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>基本情報</h3>
+          <p style={{ marginBottom: '8px', fontSize: '14px' }}><strong>事業者名:</strong> {businessName || '未入力'}</p>
+          <p style={{ marginBottom: '8px', fontSize: '14px' }}>
+            <strong>申請枠:</strong> {
+              applicationCategory === 'normal' ? '通常枠（上限50万円）' :
+              applicationCategory === 'startup' ? '創業枠（上限200万円）' :
+              '賃金引上げ枠（上限200万円）'
+            }
+          </p>
+          <p style={{ fontSize: '14px' }}><strong>インボイス特例:</strong> {isInvoiceEligible ? '対象（+50万円）' : '対象外'}</p>
+        </div>
+
+        <div style={{ marginBottom: '25px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>経費明細一覧</h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
+            <thead>
+              <tr style={{ background: '#667eea', color: 'white' }}>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>No.</th>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>経費区分</th>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'left' }}>内容</th>
+                <th style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>金額（円）</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((exp, index) => (
+                <tr key={index} style={{ background: index % 2 === 0 ? '#f7fafc' : 'white' }}>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{index + 1}</td>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.category}</td>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0' }}>{exp.description}</td>
+                  <td style={{ padding: '10px', border: '1px solid #e2e8f0', textAlign: 'right' }}>¥{exp.amount.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {(() => {
+          const check = checkWebsiteFeeLimit()
+          return check.websiteFeeTotal > 0 && (
+            <div style={{ marginBottom: '25px', padding: '15px', background: check.isOver ? '#fee2e2' : '#d1fae5', borderRadius: '8px', border: check.isOver ? '2px solid #ef4444' : '2px solid #10b981' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ウェブサイト関連費チェック</h3>
+              <p style={{ fontSize: '13px', marginBottom: '5px' }}>ウェブサイト関連費合計: ¥{check.websiteFeeTotal.toLocaleString()} ({check.percentage}%)</p>
+              <p style={{ fontSize: '13px', color: check.isOver ? '#991b1b' : '#065f46' }}>
+                {check.isOver ? `⚠️ 警告: 上限を超えています（上限: ¥${Math.floor(check.limit).toLocaleString()}）` : `✓ 上限内です（上限: ¥${Math.floor(check.limit).toLocaleString()}）`}
+              </p>
+            </div>
+          )
+        })()}
+
+        <div style={{ padding: '20px', background: '#edf2f7', borderRadius: '8px', marginBottom: '25px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>補助金シミュレーション</h3>
+          <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>申請総額:</span>
+            <span style={{ fontWeight: 'bold' }}>¥{subsidyInfo.totalExpense.toLocaleString()}</span>
+          </div>
+          <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>補助率:</span>
+            <span style={{ fontWeight: 'bold' }}>{Math.round(subsidyInfo.subsidyRate * 100)}%</span>
+          </div>
+          <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: '2px solid #cbd5e0' }}>
+            <span style={{ fontSize: '16px', fontWeight: 'bold' }}>予想受給額:</span>
+            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>¥{subsidyInfo.expectedSubsidy.toLocaleString()}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span>自己負担額:</span>
+            <span style={{ fontWeight: 'bold' }}>¥{subsidyInfo.selfPayment.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <div style={{ fontSize: '11px', color: '#718096', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+          <p style={{ marginBottom: '5px' }}>※この書類はシミュレーション結果です。実際の補助金額は審査により決定されます。</p>
+          <p>作成日時: {new Date().toLocaleString('ja-JP')}</p>
+        </div>
+      </div>
     </div>
   )
 }

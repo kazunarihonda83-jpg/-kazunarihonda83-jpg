@@ -248,59 +248,180 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
   const downloadPDF = () => {
     const doc = new jsPDF()
     const subsidyInfo = calculateSubsidy()
+    const websiteFeeCheck = checkWebsiteFeeLimit()
     
     let y = 20
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const margin = 20
+    const contentWidth = pageWidth - (margin * 2)
+    
+    // ヘッダー背景
+    doc.setFillColor(102, 126, 234)
+    doc.rect(0, 0, pageWidth, 35, 'F')
     
     // タイトル
-    doc.setFontSize(18)
-    doc.text('Subsidy Expense Plan', 105, y, { align: 'center' })
-    y += 15
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(20)
+    doc.text('小規模事業者持続化補助金', pageWidth / 2, 15, { align: 'center' })
+    doc.setFontSize(16)
+    doc.text('経費計画書', pageWidth / 2, 27, { align: 'center' })
     
-    // 基本情報
-    doc.setFontSize(12)
-    doc.text(`Business Name: ${businessName || 'N/A'}`, 20, y)
-    y += 10
+    y = 45
+    doc.setTextColor(0, 0, 0)
+    
+    // 基本情報セクション
+    doc.setFillColor(237, 242, 247)
+    doc.rect(margin, y, contentWidth, 35, 'F')
+    
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('基本情報', margin + 5, y + 8)
+    
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`事業者名: ${businessName || '未入力'}`, margin + 5, y + 18)
     
     const categoryMap = {
-      'normal': 'Normal (500,000 yen)',
-      'startup': 'Startup (2,000,000 yen)',
-      'wage-increase': 'Wage Increase (2,000,000 yen)'
+      'normal': '通常枠（上限50万円）',
+      'startup': '創業枠（上限200万円）',
+      'wage-increase': '賃金引上げ枠（上限200万円）'
     }
-    doc.text(`Category: ${categoryMap[applicationCategory]}`, 20, y)
-    y += 10
-    doc.text(`Invoice Special: ${isInvoiceEligible ? 'Yes (+500,000 yen)' : 'No'}`, 20, y)
-    y += 15
+    doc.text(`申請枠: ${categoryMap[applicationCategory]}`, margin + 5, y + 26)
+    doc.text(`インボイス特例: ${isInvoiceEligible ? '対象（+50万円）' : '対象外'}`, margin + 5, y + 34)
     
-    // 経費一覧
+    y += 45
+    
+    // 経費一覧セクション
     doc.setFontSize(14)
-    doc.text('Expense Items', 20, y)
-    y += 10
+    doc.setFont('helvetica', 'bold')
+    doc.text('経費明細一覧', margin, y)
+    y += 8
     
+    // テーブルヘッダー
+    doc.setFillColor(102, 126, 234)
+    doc.rect(margin, y, contentWidth, 8, 'F')
+    doc.setTextColor(255, 255, 255)
     doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text('No.', margin + 3, y + 6)
+    doc.text('経費区分', margin + 15, y + 6)
+    doc.text('内容', margin + 55, y + 6)
+    doc.text('金額（円）', margin + contentWidth - 35, y + 6)
+    
+    y += 10
+    doc.setTextColor(0, 0, 0)
+    doc.setFont('helvetica', 'normal')
+    
+    // 経費項目
     expenses.forEach((exp, index) => {
-      if (y > 270) {
+      if (y > 260) {
         doc.addPage()
         y = 20
       }
-      doc.text(`${index + 1}. ${exp.category}`, 20, y)
-      y += 6
-      doc.text(`   ${exp.description}`, 20, y)
-      y += 6
-      doc.text(`   Amount: ${exp.amount.toLocaleString()} yen`, 20, y)
-      y += 8
+      
+      // 行背景（交互）
+      if (index % 2 === 0) {
+        doc.setFillColor(249, 250, 251)
+        doc.rect(margin, y - 2, contentWidth, 14, 'F')
+      }
+      
+      doc.setFontSize(9)
+      doc.text(`${index + 1}`, margin + 3, y + 4)
+      doc.text(exp.category, margin + 15, y + 4, { maxWidth: 35 })
+      doc.text(exp.description, margin + 55, y + 4, { maxWidth: 75 })
+      doc.text(`¥${exp.amount.toLocaleString()}`, margin + contentWidth - 35, y + 4)
+      
+      y += 14
     })
     
     y += 5
     
-    // 合計
-    doc.setFontSize(12)
-    doc.text(`Total Expense: ${subsidyInfo.totalExpense.toLocaleString()} yen`, 20, y)
-    y += 8
-    doc.text(`Expected Subsidy: ${subsidyInfo.expectedSubsidy.toLocaleString()} yen`, 20, y)
-    y += 8
-    doc.text(`Self Payment: ${subsidyInfo.selfPayment.toLocaleString()} yen`, 20, y)
+    // ウェブサイト関連費チェック
+    if (websiteFeeCheck.websiteFeeTotal > 0) {
+      if (y > 240) {
+        doc.addPage()
+        y = 20
+      }
+      
+      doc.setFillColor(254, 243, 199)
+      if (websiteFeeCheck.isOver) {
+        doc.setFillColor(254, 226, 226)
+      }
+      doc.rect(margin, y, contentWidth, 20, 'F')
+      
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.text('ウェブサイト関連費チェック', margin + 5, y + 7)
+      
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.text(`ウェブサイト関連費合計: ¥${websiteFeeCheck.websiteFeeTotal.toLocaleString()} (${websiteFeeCheck.percentage}%)`, margin + 5, y + 14)
+      
+      if (websiteFeeCheck.isOver) {
+        doc.setTextColor(153, 27, 27)
+        doc.text(`警告: 上限を超えています（上限: ¥${Math.floor(websiteFeeCheck.limit).toLocaleString()}）`, margin + 5, y + 19)
+      } else {
+        doc.setTextColor(6, 95, 70)
+        doc.text(`上限内です（上限: ¥${Math.floor(websiteFeeCheck.limit).toLocaleString()}）`, margin + 5, y + 19)
+      }
+      doc.setTextColor(0, 0, 0)
+      
+      y += 25
+    }
     
-    doc.save(`expense-plan-${businessName || 'draft'}.pdf`)
+    // 合計セクション
+    if (y > 220) {
+      doc.addPage()
+      y = 20
+    }
+    
+    doc.setFillColor(237, 242, 247)
+    doc.rect(margin, y, contentWidth, 40, 'F')
+    
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.text('補助金シミュレーション', margin + 5, y + 8)
+    
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    doc.text('申請総額:', margin + 5, y + 18)
+    doc.text(`¥${subsidyInfo.totalExpense.toLocaleString()}`, margin + 80, y + 18)
+    
+    doc.text('補助率:', margin + 5, y + 26)
+    doc.text(`${Math.round(subsidyInfo.subsidyRate * 100)}%`, margin + 80, y + 26)
+    
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(12)
+    doc.text('予想受給額:', margin + 5, y + 34)
+    doc.setTextColor(102, 126, 234)
+    doc.text(`¥${subsidyInfo.expectedSubsidy.toLocaleString()}`, margin + 80, y + 34)
+    
+    doc.setTextColor(0, 0, 0)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(11)
+    
+    y += 45
+    
+    doc.text('自己負担額:', margin + 5, y)
+    doc.text(`¥${subsidyInfo.selfPayment.toLocaleString()}`, margin + 80, y)
+    
+    // フッター
+    y += 15
+    doc.setFontSize(8)
+    doc.setTextColor(128, 128, 128)
+    doc.text('※この書類はシミュレーション結果です。実際の補助金額は審査により決定されます。', margin, y)
+    doc.text(`作成日時: ${new Date().toLocaleString('ja-JP')}`, margin, y + 5)
+    
+    // ページ番号
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(8)
+      doc.setTextColor(128, 128, 128)
+      doc.text(`${i} / ${pageCount}`, pageWidth - margin, doc.internal.pageSize.getHeight() - 10, { align: 'right' })
+    }
+    
+    doc.save(`補助金経費計画書_${businessName || '下書き'}_${new Date().toLocaleDateString('ja-JP').replace(/\//g, '')}.pdf`)
     alert('📄 PDFをダウンロードしました！')
   }
 

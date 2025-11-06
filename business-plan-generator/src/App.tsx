@@ -126,9 +126,14 @@ function App() {
                 </ol>
               </div>
 
-              <button onClick={handleReset} className="btn-reset">
-                新しい計画を作成する
-              </button>
+              <div className="completion-actions">
+                <button onClick={() => setIsCompleted(false)} className="btn-back">
+                  ← プランに戻る（PDF出力可能）
+                </button>
+                <button onClick={handleReset} className="btn-reset">
+                  新しい計画を作成する
+                </button>
+              </div>
             </div>
           </div>
         )}

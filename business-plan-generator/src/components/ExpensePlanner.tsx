@@ -9,6 +9,8 @@ import './ExpensePlanner.css'
 
 interface ExpensePlannerProps {
   onComplete: (expenses: ExpenseItem[], totalExpense: number, subsidyInfo: any) => void
+  readOnly?: boolean
+  initialExpenses?: ExpenseItem[]
 }
 
 const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
@@ -32,8 +34,11 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
   const [selectedCategoryForDetail, setSelectedCategoryForDetail] = useState<string | null>(null)
   const [showPdfPreview, setShowPdfPreview] = useState(false)
   
+  // メモ編集用state
+  const [editingMemoIndex, setEditingMemoIndex] = useState<number | null>(null)
+  const [editingMemoValue, setEditingMemoValue] = useState('')
+  
   // スケジュール管理用state
-  const [applicationDeadline, setApplicationDeadline] = useState('')
   const [showSchedule, setShowSchedule] = useState(false)
 
   // 必要書類選択用state
@@ -51,7 +56,6 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
         setApplicationCategory(data.applicationCategory || 'normal')
         setIsInvoiceEligible(data.isInvoiceEligible || false)
         setExpenses(data.expenses || [])
-        setApplicationDeadline(data.applicationDeadline || '')
         setInputMode(data.inputMode || null)
         setCompanyType(data.companyType || 'corporation')
         setBusinessPeriod(data.businessPeriod || 'second-year-plus')
@@ -69,7 +73,6 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       applicationCategory,
       isInvoiceEligible,
       expenses,
-      applicationDeadline,
       inputMode,
       companyType,
       businessPeriod,
@@ -219,6 +222,30 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
 
   const removeExpense = (index: number) => {
     setExpenses(expenses.filter((_, i) => i !== index))
+  }
+
+  const updateExpenseMemo = (index: number, memo: string) => {
+    const updatedExpenses = [...expenses]
+    updatedExpenses[index] = { ...updatedExpenses[index], memo }
+    setExpenses(updatedExpenses)
+  }
+
+  const startEditingMemo = (index: number, currentMemo: string = '') => {
+    setEditingMemoIndex(index)
+    setEditingMemoValue(currentMemo)
+  }
+
+  const saveMemo = () => {
+    if (editingMemoIndex !== null) {
+      updateExpenseMemo(editingMemoIndex, editingMemoValue)
+      setEditingMemoIndex(null)
+      setEditingMemoValue('')
+    }
+  }
+
+  const cancelEditingMemo = () => {
+    setEditingMemoIndex(null)
+    setEditingMemoValue('')
   }
 
   const calculateSubsidy = () => {
@@ -730,12 +757,38 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                     <td>{exp.description}</td>
                     <td className="amount">¥{exp.amount.toLocaleString()}</td>
                     <td className="memo-cell">
-                      {exp.memo ? (
-                        <div className="memo-content" title={exp.memo}>
-                          {exp.memo}
+                      {editingMemoIndex === index ? (
+                        <div className="memo-edit-inline">
+                          <textarea
+                            value={editingMemoValue}
+                            onChange={(e) => setEditingMemoValue(e.target.value)}
+                            placeholder="メモを入力..."
+                            rows={2}
+                            autoFocus
+                          />
+                          <div className="memo-edit-buttons">
+                            <button onClick={saveMemo} className="btn-save-memo" title="保存">
+                              ✓
+                            </button>
+                            <button onClick={cancelEditingMemo} className="btn-cancel-memo" title="キャンセル">
+                              ✕
+                            </button>
+                          </div>
                         </div>
                       ) : (
-                        <span className="no-memo">-</span>
+                        <div 
+                          className="memo-display"
+                          onClick={() => startEditingMemo(index, exp.memo || '')}
+                          title={exp.memo || 'クリックしてメモを追加'}
+                        >
+                          {exp.memo ? (
+                            <div className="memo-content">
+                              {exp.memo}
+                            </div>
+                          ) : (
+                            <span className="no-memo">クリックして追加</span>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td>
@@ -842,41 +895,14 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
         </section>
       )}
 
-      {/* 申請スケジュール管理 */}
+      {/* 必要書類をチェック */}
       <section className="planner-section schedule-section">
         <h2 onClick={() => setShowSchedule(!showSchedule)} style={{ cursor: 'pointer' }}>
-          <Calendar size={24} /> 申請スケジュール管理 {showSchedule ? '▼' : '▶'}
+          <Calendar size={24} /> 必要書類をチェック {showSchedule ? '▼' : '▶'}
         </h2>
         
         {showSchedule && (
           <div className="schedule-content">
-            <div className="schedule-deadline">
-              <label htmlFor="deadline">申請締切日:</label>
-              <input
-                id="deadline"
-                type="date"
-                value={applicationDeadline}
-                onChange={(e) => setApplicationDeadline(e.target.value)}
-                className="deadline-input"
-              />
-              {applicationDeadline && (() => {
-                const deadline = new Date(applicationDeadline)
-                const today = new Date()
-                const daysLeft = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                return (
-                  <div className={`countdown ${daysLeft <= 7 ? 'urgent' : daysLeft <= 14 ? 'warning' : ''}`}>
-                    {daysLeft > 0 ? (
-                      <>⏰ あと <strong>{daysLeft}日</strong></>
-                    ) : daysLeft === 0 ? (
-                      <>🔥 <strong>本日締切！</strong></>
-                    ) : (
-                      <>❌ 締切を過ぎています</>
-                    )}
-                  </div>
-                )
-              })()}
-            </div>
-
             <div className="schedule-todos">
               <h3>📝 必要書類リスト</h3>
               
@@ -1082,37 +1108,6 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                   </div>
                 )
               })()}
-            </div>
-
-            <div className="schedule-reminders">
-              <h3>🔔 リマインダー</h3>
-              <div className="reminder-list">
-                {applicationDeadline && (() => {
-                  const deadline = new Date(applicationDeadline)
-                  const today = new Date()
-                  const daysLeft = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-                  
-                  return (
-                    <>
-                      {daysLeft >= 14 && (
-                        <div className="reminder-item">
-                          📅 2週間前（{new Date(deadline.getTime() - 14 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP')}）：書類の最終確認を開始
-                        </div>
-                      )}
-                      {daysLeft >= 7 && (
-                        <div className="reminder-item warning">
-                          ⚠️ 1週間前（{new Date(deadline.getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP')}）：申請書提出の準備完了
-                        </div>
-                      )}
-                      {daysLeft >= 3 && (
-                        <div className="reminder-item urgent">
-                          🔥 3日前（{new Date(deadline.getTime() - 3 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP')}）：最終チェック＆提出
-                        </div>
-                      )}
-                    </>
-                  )
-                })()}
-              </div>
             </div>
           </div>
         )}

@@ -502,7 +502,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                 </button>
                 
                 <div className="preset-plan-note">
-                  💡 このプランは現在の申請枠（{applicationCategory === 'normal' ? '通常枠' : '賃上げ枠'}）
+                  💡 このプランは現在の申請枠（{applicationCategory === 'normal' ? '通常枠' : '賃金引上げ枠'}）
                   {isInvoiceEligible && '＋インボイス特例'}に最適化されています
                 </div>
               </>

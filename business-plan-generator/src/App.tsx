@@ -73,9 +73,11 @@ function App() {
       </header>
 
       <main className="app-main">
-        {!isCompleted ? (
+        <div style={{ display: isCompleted ? 'none' : 'block' }}>
           <ExpensePlanner onComplete={handleComplete} />
-        ) : (
+        </div>
+        
+        {isCompleted && (
           <div className="completion-screen">
             <div className="success-message">
               <h2>✅ 経費計画が完了しました！</h2>

@@ -1235,7 +1235,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
               <p style={{ fontSize: '13px', marginBottom: '5px' }}>ウェブサイト関連費合計: ¥{check.websiteFeeTotal.toLocaleString()} ({check.percentage}%)</p>
               <p style={{ fontSize: '13px', marginBottom: '5px' }}>上限: 総額の1/4、かつ最大50万円（¥{Math.floor(check.limit).toLocaleString()}）</p>
               <p style={{ fontSize: '13px', color: check.isOver ? '#991b1b' : '#065f46' }}>
-                {isOverLimit ? `⚠️ 警告: 上限を超えています` : `✓ 上限内です（残り: ¥${Math.floor(effectiveLimit - check.websiteFeeTotal).toLocaleString()}）`}
+                {check.isOver ? `⚠️ 警告: 上限を超えています` : `✓ 上限内です（残り: ¥${Math.floor(check.limit - check.websiteFeeTotal).toLocaleString()}）`}
               </p>
             </div>
           )

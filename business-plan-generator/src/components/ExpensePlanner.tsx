@@ -77,9 +77,8 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
     ],
     'Web集客強化': [
       { category: 'ウェブサイト関連費', description: 'ホームページリニューアル', amount: 300000 },
-      { category: 'ウェブサイト関連費', description: 'SEO対策・アクセス解析', amount: 150000 },
-      { category: '広報費', description: 'SNS広告運用（6ヶ月）', amount: 200000 },
-      { category: '委託・外注費', description: 'プロモーション動画制作', amount: 250000 }
+      { category: 'ウェブサイト関連費', description: 'SNS広告運用（6ヶ月）', amount: 200000 },
+      { category: 'ウェブサイト関連費', description: 'プロモーション動画制作', amount: 250000 }
     ],
     '新メニュー開発': [
       { category: '開発費', description: '新商品試作開発費', amount: 150000 },
@@ -99,6 +98,65 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       { category: '開発費', description: '通販用商品パッケージ開発', amount: 200000 },
       { category: '広報費', description: 'EC広告・プロモーション', amount: 150000 }
     ]
+  }
+
+  // 申請枠別おまかせプラン
+  const presetPlans = {
+    'normal': {
+      name: '通常枠プラン',
+      description: '上限50万円の標準的なプラン',
+      items: [
+        { category: '広報費', description: 'LP作成（1個）', amount: 187500, note: '※税別：187,500円' },
+        { category: '広報費', description: 'チラシ制作（4個）', amount: 300000, note: '※税別：300,000円' },
+        { category: '広報費', description: 'DM発送（1,000部）', amount: 150000, note: '※税別：150,000円' }
+      ],
+      subtotal: 637500,
+      tax: 63750,
+      total: 701250,
+      expectedSubsidy: 467500
+    },
+    'normal-invoice': {
+      name: '通常枠＋インボイス特例',
+      description: '上限100万円（50万円＋50万円）のプラン',
+      items: [
+        { category: '広報費', description: 'メニュー表作成（1個）', amount: 260000, note: '※税別：260,000円' },
+        { category: '広報費', description: 'チラシ制作（2個）', amount: 200000, note: '※税別：200,000円' },
+        { category: '広報費', description: 'LP作成（1個）', amount: 375000, note: '※税別：375,000円' },
+        { category: '広報費', description: 'DM発送（5,000部）', amount: 750000, note: '※税別：750,000円' }
+      ],
+      subtotal: 1585000,
+      tax: 158500,
+      total: 1743500,
+      expectedSubsidy: 1000000
+    },
+    'wage-increase': {
+      name: '賃上げ枠プラン',
+      description: '上限200万円の賃上げ枠プラン',
+      items: [
+        { category: '広報費', description: 'メニュー表作成（1個）', amount: 260000, note: '※税別：260,000円' },
+        { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
+        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: '広報費', description: 'DM発送（10,000部）', amount: 1500000, note: '※税別：1,500,000円' }
+      ],
+      subtotal: 3010000,
+      tax: 301000,
+      total: 3311000,
+      expectedSubsidy: 2000000
+    },
+    'wage-increase-invoice': {
+      name: '賃上げ枠＋インボイス特例',
+      description: '上限250万円（200万円＋50万円）のプラン',
+      items: [
+        { category: '広報費', description: 'メニュー表作成（1個）', amount: 260000, note: '※税別：260,000円' },
+        { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
+        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: '広報費', description: 'DM発送（15,000部）', amount: 2250000, note: '※税別：2,250,000円' }
+      ],
+      subtotal: 3760000,
+      tax: 376000,
+      total: 4136000,
+      expectedSubsidy: 2500000
+    }
   }
 
   const addExpense = () => {
@@ -213,6 +271,41 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
     alert('📄 PDFをダウンロードしました！')
   }
 
+  // プリセットプランを適用
+  const applyPresetPlan = (planKey: string) => {
+    const plan = presetPlans[planKey as keyof typeof presetPlans]
+    if (!plan) return
+    
+    // 既存の経費をクリアして確認
+    if (expenses.length > 0) {
+      if (!confirm('既存の経費をクリアして、このプランを適用しますか？')) {
+        return
+      }
+    }
+    
+    // プランの経費項目を追加
+    const newExpenses: ExpenseItem[] = plan.items.map((item, index) => ({
+      id: Date.now() + index,
+      category: item.category,
+      description: item.description,
+      amount: item.amount,
+      details: item.note
+    }))
+    
+    setExpenses(newExpenses)
+    alert(`✅ ${plan.name}を適用しました！\n\n合計: ¥${plan.total.toLocaleString()}（税込）\n予想受給額: ¥${plan.expectedSubsidy.toLocaleString()}`)
+  }
+
+  // 現在の申請枠とインボイス対応状況に合ったプランキーを取得
+  const getCurrentPlanKey = () => {
+    if (applicationCategory === 'normal') {
+      return isInvoiceEligible ? 'normal-invoice' : 'normal'
+    } else if (applicationCategory === 'wage-increase') {
+      return isInvoiceEligible ? 'wage-increase-invoice' : 'wage-increase'
+    }
+    return 'normal'
+  }
+
   const handleComplete = () => {
     const subsidyInfo = calculateSubsidy()
     onComplete(expenses, subsidyInfo.totalExpense, subsidyInfo)
@@ -272,6 +365,71 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
               <span>インボイス特例対象（+50万円）</span>
             </label>
           </div>
+        </div>
+      </section>
+
+      {/* 全てお任せプラン */}
+      <section className="planner-section preset-plans">
+        <h2><TrendingUp size={24} /> 全てお任せプラン</h2>
+        <p className="section-description">申請枠に最適化された経費プランを一括適用できます</p>
+        
+        <div className="preset-plan-card">
+          {(() => {
+            const planKey = getCurrentPlanKey()
+            const plan = presetPlans[planKey as keyof typeof presetPlans]
+            
+            return (
+              <>
+                <div className="preset-plan-header">
+                  <h3>📊 {plan.name}</h3>
+                  <p>{plan.description}</p>
+                </div>
+                
+                <div className="preset-plan-items">
+                  <h4>📝 経費内訳</h4>
+                  <ul className="preset-item-list">
+                    {plan.items.map((item, idx) => (
+                      <li key={idx}>
+                        <span className="preset-item-name">{item.description}</span>
+                        <span className="preset-item-amount">¥{item.amount.toLocaleString()}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div className="preset-plan-summary">
+                  <div className="preset-summary-row">
+                    <span>小計（税別）:</span>
+                    <span>¥{plan.subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="preset-summary-row">
+                    <span>消費税（10%）:</span>
+                    <span>¥{plan.tax.toLocaleString()}</span>
+                  </div>
+                  <div className="preset-summary-row total">
+                    <span>合計（税込）:</span>
+                    <span className="highlight">¥{plan.total.toLocaleString()}</span>
+                  </div>
+                  <div className="preset-summary-row subsidy">
+                    <span>💰 予想受給額:</span>
+                    <span className="subsidy-amount">¥{plan.expectedSubsidy.toLocaleString()}</span>
+                  </div>
+                </div>
+                
+                <button 
+                  className="btn-apply-preset"
+                  onClick={() => applyPresetPlan(planKey)}
+                >
+                  <TrendingUp size={20} /> このプランを適用する
+                </button>
+                
+                <div className="preset-plan-note">
+                  💡 このプランは現在の申請枠（{applicationCategory === 'normal' ? '通常枠' : '賃上げ枠'}）
+                  {isInvoiceEligible && '＋インボイス特例'}に最適化されています
+                </div>
+              </>
+            )
+          })()}
         </div>
       </section>
 

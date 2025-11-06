@@ -1058,6 +1058,147 @@
   color: #991b1b;
 }
 
+/* プリセットプラン */
+.preset-plans {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-left: 4px solid #f59e0b;
+}
+
+.preset-plan-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.preset-plan-header h3 {
+  color: #2d3748;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.preset-plan-header p {
+  color: #718096;
+  margin-bottom: 1.5rem;
+}
+
+.preset-plan-items {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.preset-plan-items h4 {
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.preset-item-list {
+  list-style: none;
+  padding: 0;
+}
+
+.preset-item-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #667eea;
+}
+
+.preset-item-name {
+  color: #4a5568;
+  font-weight: 500;
+  flex: 1;
+}
+
+.preset-item-amount {
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-left: 1rem;
+}
+
+.preset-plan-summary {
+  background: #edf2f7;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+.preset-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  color: #4a5568;
+  font-size: 1rem;
+}
+
+.preset-summary-row.total {
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 2px solid #cbd5e0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.preset-summary-row.subsidy {
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 2px dashed #667eea;
+  font-size: 1.3rem;
+}
+
+.preset-summary-row .highlight {
+  color: #2d3748;
+  font-size: 1.3rem;
+}
+
+.preset-summary-row .subsidy-amount {
+  color: #667eea;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.btn-apply-preset {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-apply-preset:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.preset-plan-note {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #dbeafe;
+  border-left: 4px solid #3b82f6;
+  border-radius: 6px;
+  color: #1e40af;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
 /* レスポンシブ追加 */
 @media (max-width: 768px) {
   .header-actions {
@@ -1087,5 +1228,19 @@
 
   .modal-header {
     padding: 1rem;
+  }
+
+  .preset-plan-card {
+    padding: 1rem;
+  }
+
+  .preset-item-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .preset-item-amount {
+    margin-left: 0;
   }
 }

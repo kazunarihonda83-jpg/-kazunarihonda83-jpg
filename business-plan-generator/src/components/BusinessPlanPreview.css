@@ -1,0 +1,361 @@
+.business-plan-preview {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.preview-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.download-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-back {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.3s;
+}
+
+.btn-back:hover {
+  background: #cbd5e0;
+}
+
+.btn-download {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.btn-download:hover {
+  background: #5a67d8;
+  transform: translateY(-2px);
+}
+
+.preview-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.preview-header {
+  text-align: center;
+  padding: 2rem 0;
+  border-bottom: 3px solid #667eea;
+  margin-bottom: 2rem;
+}
+
+.preview-header h1 {
+  color: #2d3748;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.preview-header .subtitle {
+  color: #718096;
+  font-size: 1.1rem;
+}
+
+.preview-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.preview-section:last-of-type {
+  border-bottom: none;
+}
+
+.preview-section h2 {
+  color: #2d3748;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-left: 1rem;
+  border-left: 4px solid #667eea;
+}
+
+.preview-section h3 {
+  color: #4a5568;
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f7fafc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.info-table th,
+.info-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.info-table th {
+  background: #edf2f7;
+  color: #4a5568;
+  font-weight: 600;
+  width: 30%;
+}
+
+.info-table tr:last-child th,
+.info-table tr:last-child td {
+  border-bottom: none;
+}
+
+.text-content {
+  line-height: 1.8;
+  color: #2d3748;
+}
+
+.text-content p {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 3px solid #667eea;
+}
+
+.business-plan-document {
+  background: white;
+  padding: 0;
+}
+
+.business-plan-document .plan-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.business-plan-document .plan-section:last-child {
+  border-bottom: none;
+}
+
+.business-plan-document .section-title {
+  color: #667eea;
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #667eea;
+}
+
+.business-plan-document .subsection-title {
+  color: #4a5568;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem 0;
+}
+
+.business-plan-document .section-content p {
+  margin-bottom: 0.75rem;
+  line-height: 1.8;
+  color: #2d3748;
+  background: transparent;
+  padding: 0;
+  border-left: none;
+}
+
+.business-plan-document .list-item {
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.business-plan-document .list-item:before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.75rem;
+  width: 4px;
+  height: 4px;
+  background: #667eea;
+  border-radius: 50%;
+}
+
+.expense-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.expense-table th,
+.expense-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.expense-table th {
+  background: #667eea;
+  color: white;
+  font-weight: 600;
+}
+
+.expense-table tbody tr:hover {
+  background: #f7fafc;
+}
+
+.expense-table tfoot tr {
+  background: #edf2f7;
+  font-weight: bold;
+}
+
+.expense-table tfoot td {
+  border-bottom: none;
+  font-size: 1.1rem;
+}
+
+.subsidy-summary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  border: none;
+}
+
+.subsidy-summary h2 {
+  color: white;
+  border-left-color: white;
+}
+
+.summary-box {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.1rem;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-row.highlight {
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 -1rem;
+  padding: 1rem 1rem;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.summary-row .amount {
+  font-weight: bold;
+}
+
+.summary-row .amount.large {
+  font-size: 1.5rem;
+  color: #ffd700;
+}
+
+.subsidy-summary .note {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  line-height: 1.6;
+}
+
+.preview-footer {
+  text-align: right;
+  padding-top: 2rem;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .business-plan-preview {
+    padding: 1rem;
+  }
+
+  .preview-actions {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .download-buttons {
+    flex-direction: column;
+  }
+
+  .preview-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .info-table th {
+    width: 40%;
+  }
+
+  .info-table th,
+  .info-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .expense-table {
+    font-size: 0.85rem;
+  }
+
+  .expense-table th,
+  .expense-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .summary-row {
+    font-size: 1rem;
+  }
+
+  .summary-row.highlight {
+    font-size: 1.1rem;
+  }
+}
+
+@media print {
+  .preview-actions {
+    display: none;
+  }
+
+  .business-plan-preview {
+    box-shadow: none;
+  }
+}

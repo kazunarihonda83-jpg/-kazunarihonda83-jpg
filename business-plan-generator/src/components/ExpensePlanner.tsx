@@ -35,6 +35,11 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
   const [applicationDeadline, setApplicationDeadline] = useState('')
   const [showSchedule, setShowSchedule] = useState(false)
 
+  // 必要書類選択用state
+  const [companyType, setCompanyType] = useState<'corporation' | 'individual'>('corporation')
+  const [businessPeriod, setBusinessPeriod] = useState<'first-year' | 'second-year-plus'>('second-year-plus')
+  const [hasGbizId, setHasGbizId] = useState<boolean>(true)
+
   // LocalStorageから読み込み
   useEffect(() => {
     const savedData = localStorage.getItem('expensePlannerData')
@@ -47,6 +52,9 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
         setExpenses(data.expenses || [])
         setApplicationDeadline(data.applicationDeadline || '')
         setInputMode(data.inputMode || null)
+        setCompanyType(data.companyType || 'corporation')
+        setBusinessPeriod(data.businessPeriod || 'second-year-plus')
+        setHasGbizId(data.hasGbizId !== undefined ? data.hasGbizId : true)
       } catch (e) {
         console.error('Failed to load saved data', e)
       }
@@ -62,6 +70,9 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       expenses,
       applicationDeadline,
       inputMode,
+      companyType,
+      businessPeriod,
+      hasGbizId,
       lastSaved: new Date().toISOString()
     }
     localStorage.setItem('expensePlannerData', JSON.stringify(data))
@@ -237,9 +248,9 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
     const websiteFeeTotal = websiteFees.reduce((sum, exp) => sum + exp.amount, 0)
     const totalExpense = expenses.reduce((sum, exp) => sum + exp.amount, 0)
     const quarterLimit = totalExpense * 0.25
-    const absoluteLimit = 500000
+    const absoluteLimit = 750000
     
-    // 総経費の1/4をチェックし、上限は50万円
+    // 総経費の1/4をチェックし、上限は75万円
     const limit = Math.min(quarterLimit, absoluteLimit)
     
     return {
@@ -742,7 +753,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                 <span className={`value ${websiteCheck.isOver ? 'error' : ''}`}>{websiteCheck.percentage}%</span>
               </div>
               <div className="website-check-row">
-                <span className="label">上限額（総額の1/4、最大50万円）:</span>
+                <span className="label">上限額（総額の1/4、最大75万円）:</span>
                 <span className="value">¥{Math.floor(websiteCheck.limit).toLocaleString()}</span>
               </div>
               {websiteCheck.isOver ? (
@@ -750,7 +761,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                   <AlertTriangle size={20} />
                   <div>
                     <strong>⚠️ 警告：ウェブサイト関連費が上限を超えています！</strong>
-                    <p>ウェブサイト関連費は総額の1/4（25%）まで、かつ最大50万円までしか補助対象になりません。</p>
+                    <p>ウェブサイト関連費は総額の1/4（25%）まで、かつ最大75万円までしか補助対象になりません。</p>
                     <p>現在: ¥{websiteCheck.websiteFeeTotal.toLocaleString()} / 上限: ¥{Math.floor(websiteCheck.limit).toLocaleString()}</p>
                     <p>超過分: ¥{(websiteCheck.websiteFeeTotal - websiteCheck.limit).toLocaleString()}</p>
                   </div>
@@ -842,6 +853,82 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
 
             <div className="schedule-todos">
               <h3>📝 必要書類リスト</h3>
+              
+              {/* 書類選択フォーム */}
+              <div className="document-selector">
+                <div className="selector-row">
+                  <label>事業形態:</label>
+                  <div className="radio-group">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        value="corporation"
+                        checked={companyType === 'corporation'}
+                        onChange={(e) => setCompanyType(e.target.value as 'corporation')}
+                      />
+                      法人
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        value="individual"
+                        checked={companyType === 'individual'}
+                        onChange={(e) => setCompanyType(e.target.value as 'individual')}
+                      />
+                      個人事業主
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="selector-row">
+                  <label>事業期間:</label>
+                  <div className="radio-group">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        value="first-year"
+                        checked={businessPeriod === 'first-year'}
+                        onChange={(e) => setBusinessPeriod(e.target.value as 'first-year')}
+                      />
+                      1期目未満
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        value="second-year-plus"
+                        checked={businessPeriod === 'second-year-plus'}
+                        onChange={(e) => setBusinessPeriod(e.target.value as 'second-year-plus')}
+                      />
+                      2期目以降
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="selector-row">
+                  <label>gBiz ID:</label>
+                  <div className="radio-group">
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        value="yes"
+                        checked={hasGbizId === true}
+                        onChange={() => setHasGbizId(true)}
+                      />
+                      あり
+                    </label>
+                    <label className="radio-label">
+                      <input
+                        type="radio"
+                        value="no"
+                        checked={hasGbizId === false}
+                        onChange={() => setHasGbizId(false)}
+                      />
+                      なし
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
               {(() => {
                 const { isWageIncrease, hasInvoice } = getRequiredDocuments()
                 
@@ -851,65 +938,70 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                     <div className="document-section">
                       <h4>■ 通常枠の必要書類</h4>
                       
-                      <div className="document-category">
-                        <h5>＜法人＞</h5>
-                        <div className="document-case">
-                          <strong>1期目未満／gBizあり</strong>
-                          <ul>
-                            <li>開業後から現在までの売上台帳（様式任意）</li>
-                            <li>現在事項全部証明書または履歴事項全部証明書（申請書提出日から3か月以内・原本）</li>
-                          </ul>
+                      {companyType === 'corporation' ? (
+                        <div className="document-category">
+                          <h5>＜法人＞</h5>
+                          {businessPeriod === 'first-year' ? (
+                            <div className="document-case">
+                              <strong>1期目未満{hasGbizId ? '／gBizあり' : '／gBizなし'}</strong>
+                              <ul>
+                                <li>開業後から現在までの売上台帳（様式任意）</li>
+                                <li>現在事項全部証明書または履歴事項全部証明書（申請書提出日から3か月以内・原本）</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>法人印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </ul>
+                            </div>
+                          ) : (
+                            <div className="document-case">
+                              <strong>2期目以降{hasGbizId ? '／gBizあり' : '／gBizなし'}</strong>
+                              <ul>
+                                <li>直近1期分の損益計算書および貸借対照表</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>法人印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </ul>
+                            </div>
+                          )}
                         </div>
-                        <div className="document-case">
-                          <strong>1期目未満／gBizなし</strong>
-                          <ul>
-                            <li>上記書類に加え、法人印鑑証明書（gBiz ID作成用）</li>
-                            <li>※gBiz IDはプライムの取得をお願いいたします</li>
-                          </ul>
+                      ) : (
+                        <div className="document-category">
+                          <h5>＜個人事業主＞</h5>
+                          {businessPeriod === 'first-year' ? (
+                            <div className="document-case">
+                              <strong>1期目未満{hasGbizId ? '／gBizあり' : '／gBizなし'}</strong>
+                              <ul>
+                                <li>開業後から現在までの売上台帳（様式任意）</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>代表者個人の印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </ul>
+                            </div>
+                          ) : (
+                            <div className="document-case">
+                              <strong>2期目以降{hasGbizId ? '／gBizあり' : '／gBizなし'}</strong>
+                              <ul>
+                                <li>令和6年度分の確定申告書および青色（または白色）申告決算書</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>代表者個人の印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </ul>
+                            </div>
+                          )}
                         </div>
-                        <div className="document-case">
-                          <strong>2期目以降／gBizあり</strong>
-                          <ul>
-                            <li>直近1期分の損益計算書および貸借対照表</li>
-                          </ul>
-                        </div>
-                        <div className="document-case">
-                          <strong>2期目以降／gBizなし</strong>
-                          <ul>
-                            <li>上記書類に加え、法人印鑑証明書（gBiz ID作成用）</li>
-                            <li>※gBiz IDはプライムの取得をお願いいたします</li>
-                          </ul>
-                        </div>
-                      </div>
-
-                      <div className="document-category">
-                        <h5>＜個人事業主＞</h5>
-                        <div className="document-case">
-                          <strong>1期目未満／gBizあり</strong>
-                          <ul>
-                            <li>開業後から現在までの売上台帳（様式任意）</li>
-                          </ul>
-                        </div>
-                        <div className="document-case">
-                          <strong>1期目未満／gBizなし</strong>
-                          <ul>
-                            <li>売上台帳に加え、代表者個人の印鑑証明書（gBiz ID作成用）</li>
-                            <li>※gBiz IDはプライムの取得をお願いいたします</li>
-                          </ul>
-                        </div>
-                        <div className="document-case">
-                          <strong>2期目以降／gBizあり</strong>
-                          <ul>
-                            <li>令和6年度分の確定申告書および青色（または白色）申告決算書</li>
-                          </ul>
-                        </div>
-                        <div className="document-case">
-                          <strong>2期目以降／gBizなし</strong>
-                          <ul>
-                            <li>上記書類に加え、代表者個人の印鑑証明書</li>
-                          </ul>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* インボイス枠の追加書類 */}
@@ -1136,7 +1228,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                     <div style={{ marginBottom: '25px', padding: '15px', background: check.isOver ? '#fee2e2' : '#d1fae5', borderRadius: '8px', border: check.isOver ? '2px solid #ef4444' : '2px solid #10b981' }}>
                       <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ウェブサイト関連費チェック</h3>
                       <p style={{ fontSize: '13px', marginBottom: '5px' }}>ウェブサイト関連費合計: ¥{check.websiteFeeTotal.toLocaleString()} ({check.percentage}%)</p>
-                      <p style={{ fontSize: '13px', marginBottom: '5px' }}>上限: 総額の1/4、かつ最大50万円（¥{Math.floor(check.limit).toLocaleString()}）</p>
+                      <p style={{ fontSize: '13px', marginBottom: '5px' }}>上限: 総額の1/4、かつ最大75万円（¥{Math.floor(check.limit).toLocaleString()}）</p>
                       <p style={{ fontSize: '13px', color: check.isOver ? '#991b1b' : '#065f46' }}>
                         {check.isOver ? `⚠️ 警告: 上限を超えています` : `✓ 上限内です（残り: ¥${Math.floor(check.limit - check.websiteFeeTotal).toLocaleString()}）`}
                       </p>
@@ -1233,7 +1325,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
             <div style={{ marginBottom: '25px', padding: '15px', background: check.isOver ? '#fee2e2' : '#d1fae5', borderRadius: '8px', border: check.isOver ? '2px solid #ef4444' : '2px solid #10b981' }}>
               <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ウェブサイト関連費チェック</h3>
               <p style={{ fontSize: '13px', marginBottom: '5px' }}>ウェブサイト関連費合計: ¥{check.websiteFeeTotal.toLocaleString()} ({check.percentage}%)</p>
-              <p style={{ fontSize: '13px', marginBottom: '5px' }}>上限: 総額の1/4、かつ最大50万円（¥{Math.floor(check.limit).toLocaleString()}）</p>
+              <p style={{ fontSize: '13px', marginBottom: '5px' }}>上限: 総額の1/4、かつ最大75万円（¥{Math.floor(check.limit).toLocaleString()}）</p>
               <p style={{ fontSize: '13px', color: check.isOver ? '#991b1b' : '#065f46' }}>
                 {check.isOver ? `⚠️ 警告: 上限を超えています` : `✓ 上限内です（残り: ¥${Math.floor(check.limit - check.websiteFeeTotal).toLocaleString()}）`}
               </p>

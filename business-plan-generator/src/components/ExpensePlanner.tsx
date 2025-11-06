@@ -1256,6 +1256,107 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                   </div>
                 </div>
 
+                {/* 必要書類セクション */}
+                <div style={{ marginBottom: '25px', padding: '20px', background: '#fef9f0', borderRadius: '8px', border: '2px solid #f59e0b' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>📝 必要書類リスト</h3>
+                  
+                  <div style={{ marginBottom: '15px', padding: '10px', background: 'white', borderRadius: '6px' }}>
+                    <p style={{ fontSize: '13px', marginBottom: '5px' }}><strong>事業形態:</strong> {companyType === 'corporation' ? '法人' : '個人事業主'}</p>
+                    <p style={{ fontSize: '13px', marginBottom: '5px' }}><strong>事業期間:</strong> {businessPeriod === 'first-year' ? '1期目未満' : '2期目以降'}</p>
+                    <p style={{ fontSize: '13px' }}><strong>gBiz ID:</strong> {hasGbizId ? 'あり' : 'なし'}</p>
+                  </div>
+
+                  {(() => {
+                    const { isWageIncrease, hasInvoice } = getRequiredDocuments()
+                    return (
+                      <>
+                        {/* 通常枠の書類 */}
+                        <div style={{ marginBottom: '15px' }}>
+                          <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#2d3748', borderBottom: '2px solid #3b82f6', paddingBottom: '5px' }}>■ 通常枠の必要書類</h4>
+                          <ul style={{ marginLeft: '20px', fontSize: '12px', lineHeight: '1.8' }}>
+                            {companyType === 'corporation' && businessPeriod === 'first-year' && (
+                              <>
+                                <li>開業後から現在までの売上台帳（様式任意）</li>
+                                <li>現在事項全部証明書または履歴事項全部証明書（申請書提出日から3か月以内・原本）</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>法人印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </>
+                            )}
+                            {companyType === 'corporation' && businessPeriod === 'second-year-plus' && (
+                              <>
+                                <li>直近1期分の損益計算書および貸借対照表</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>法人印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </>
+                            )}
+                            {companyType === 'individual' && businessPeriod === 'first-year' && (
+                              <>
+                                <li>開業後から現在までの売上台帳（様式任意）</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>代表者個人の印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </>
+                            )}
+                            {companyType === 'individual' && businessPeriod === 'second-year-plus' && (
+                              <>
+                                <li>令和6年度分の確定申告書および青色（または白色）申告決算書</li>
+                                {!hasGbizId && (
+                                  <>
+                                    <li>代表者個人の印鑑証明書（gBiz ID作成用）</li>
+                                    <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                                  </>
+                                )}
+                              </>
+                            )}
+                          </ul>
+                        </div>
+
+                        {/* インボイス枠の追加書類 */}
+                        {hasInvoice && (
+                          <div style={{ marginBottom: '15px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#2d3748', borderBottom: '2px solid #9b59b6', paddingBottom: '5px' }}>■ インボイス枠 追加書類</h4>
+                            <ul style={{ marginLeft: '20px', fontSize: '12px', lineHeight: '1.8' }}>
+                              <li>インボイス番号登録通知書（既に取得済みの場合）</li>
+                              <li>※法人・個人事業主共通</li>
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* 賃金引上げ枠の追加書類 */}
+                        {isWageIncrease && (
+                          <div style={{ marginBottom: '15px' }}>
+                            <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#2d3748', borderBottom: '2px solid #e74c3c', paddingBottom: '5px' }}>■ 賃金引上げ枠 追加書類</h4>
+                            <ul style={{ marginLeft: '20px', fontSize: '12px', lineHeight: '1.8' }}>
+                              <li>従業員全員分の賃金台帳および雇用契約書</li>
+                              <li>（当社で作成代行も可能です）</li>
+                              {companyType === 'corporation' && <li>赤字事業者の場合：直近1期分の法人税申告書（別表一・別表四）</li>}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* 最大枠の場合 */}
+                        {hasInvoice && isWageIncrease && (
+                          <div style={{ padding: '10px', background: '#fef3c7', borderRadius: '6px', border: '1px solid #f59e0b' }}>
+                            <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>■ 最大枠（インボイス＆賃金引上げ）</p>
+                            <p style={{ fontSize: '11px' }}>インボイス枠・賃金引上げ枠それぞれの書類をすべてご用意ください</p>
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
+                </div>
+
                 <div style={{ fontSize: '11px', color: '#718096', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
                   <p style={{ marginBottom: '5px' }}>※この書類はシミュレーション結果です。実際の補助金額は審査により決定されます。</p>
                   <p>作成日時: {new Date().toLocaleString('ja-JP')}</p>
@@ -1352,6 +1453,118 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
             <span style={{ fontWeight: 'bold' }}>¥{subsidyInfo.selfPayment.toLocaleString()}</span>
           </div>
         </div>
+
+        {/* 必要書類リスト */}
+        {(() => {
+          const { isWageIncrease, hasInvoice } = getRequiredDocuments()
+          
+          return (
+            <div style={{ marginBottom: '25px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '15px', color: '#2d3748' }}>必要書類リスト</h3>
+              
+              <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '8px', borderLeft: '4px solid #3498db', marginBottom: '15px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#2c3e50' }}>■ 通常枠の必要書類</h4>
+                <p style={{ fontSize: '13px', marginBottom: '8px', color: '#2d3748' }}>
+                  <strong>
+                    ＜{companyType === 'corporation' ? '法人' : '個人事業主'}＞ / 
+                    {businessPeriod === 'first-year' ? '1期目未満' : '2期目以降'} / 
+                    gBiz ID {hasGbizId ? 'あり' : 'なし'}
+                  </strong>
+                </p>
+                <ul style={{ margin: '8px 0', paddingLeft: '20px', fontSize: '12px', lineHeight: '1.8' }}>
+                  {companyType === 'corporation' && businessPeriod === 'first-year' && hasGbizId && (
+                    <>
+                      <li>開業後から現在までの売上台帳（様式任意）</li>
+                      <li>現在事項全部証明書または履歴事項全部証明書（申請書提出日から3か月以内・原本）</li>
+                    </>
+                  )}
+                  {companyType === 'corporation' && businessPeriod === 'first-year' && !hasGbizId && (
+                    <>
+                      <li>開業後から現在までの売上台帳（様式任意）</li>
+                      <li>現在事項全部証明書または履歴事項全部証明書（申請書提出日から3か月以内・原本）</li>
+                      <li>法人印鑑証明書（gBiz ID作成用）</li>
+                      <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                    </>
+                  )}
+                  {companyType === 'corporation' && businessPeriod === 'second-year-plus' && hasGbizId && (
+                    <>
+                      <li>直近1期分の損益計算書および貸借対照表</li>
+                    </>
+                  )}
+                  {companyType === 'corporation' && businessPeriod === 'second-year-plus' && !hasGbizId && (
+                    <>
+                      <li>直近1期分の損益計算書および貸借対照表</li>
+                      <li>法人印鑑証明書（gBiz ID作成用）</li>
+                      <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                    </>
+                  )}
+                  {companyType === 'individual' && businessPeriod === 'first-year' && hasGbizId && (
+                    <>
+                      <li>開業後から現在までの売上台帳（様式任意）</li>
+                    </>
+                  )}
+                  {companyType === 'individual' && businessPeriod === 'first-year' && !hasGbizId && (
+                    <>
+                      <li>開業後から現在までの売上台帳（様式任意）</li>
+                      <li>代表者個人の印鑑証明書（gBiz ID作成用）</li>
+                      <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                    </>
+                  )}
+                  {companyType === 'individual' && businessPeriod === 'second-year-plus' && hasGbizId && (
+                    <>
+                      <li>令和6年度分の確定申告書および青色（または白色）申告決算書</li>
+                    </>
+                  )}
+                  {companyType === 'individual' && businessPeriod === 'second-year-plus' && !hasGbizId && (
+                    <>
+                      <li>令和6年度分の確定申告書および青色（または白色）申告決算書</li>
+                      <li>代表者個人の印鑑証明書（gBiz ID作成用）</li>
+                      <li>※gBiz IDはプライムの取得をお願いいたします</li>
+                    </>
+                  )}
+                </ul>
+              </div>
+
+              {hasInvoice && (
+                <div style={{ padding: '15px', background: '#f4f0f8', borderRadius: '8px', borderLeft: '4px solid #9b59b6', marginBottom: '15px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#2c3e50' }}>■ インボイス枠 追加書類</h4>
+                  <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '12px', lineHeight: '1.8' }}>
+                    <li>インボイス番号登録通知書（既に取得済みの場合）</li>
+                    <li>※法人・個人事業主共通</li>
+                  </ul>
+                </div>
+              )}
+
+              {isWageIncrease && (
+                <div style={{ padding: '15px', background: '#fdf0ef', borderRadius: '8px', borderLeft: '4px solid #e74c3c', marginBottom: '15px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#2c3e50' }}>■ 賃金引上げ枠 追加書類</h4>
+                  <p style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px' }}>＜{companyType === 'corporation' ? '法人' : '個人事業主'}＞</p>
+                  <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '12px', lineHeight: '1.8' }}>
+                    <li>従業員全員分の賃金台帳および雇用契約書</li>
+                    <li>（当社で作成代行も可能です）</li>
+                    {companyType === 'corporation' && (
+                      <li>赤字事業者の場合：直近1期分の法人税申告書（別表一・別表四）</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {hasInvoice && isWageIncrease && (
+                <div style={{ padding: '15px', background: '#fef9f0', borderRadius: '8px', borderLeft: '4px solid #f39c12' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px', color: '#2c3e50' }}>■ 最大枠（インボイス＆賃金引上げ）</h4>
+                  <ul style={{ margin: '0', paddingLeft: '20px', fontSize: '12px', lineHeight: '1.8' }}>
+                    <li>インボイス枠・賃金引上げ枠それぞれの書類をすべてご用意ください</li>
+                    <li>売上台帳、賃金台帳、雇用契約書、インボイス番号登録通知書</li>
+                    <li>該当する場合：{companyType === 'corporation' ? '法人' : '代表個人'}印鑑証明書</li>
+                    {companyType === 'corporation' && (
+                      <li>赤字事業者：法人税申告書（別表一・別表四）</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         <div style={{ fontSize: '11px', color: '#718096', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
           <p style={{ marginBottom: '5px' }}>※この書類はシミュレーション結果です。実際の補助金額は審査により決定されます。</p>

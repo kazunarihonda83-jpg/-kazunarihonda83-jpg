@@ -15,6 +15,9 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
   const [applicationCategory, setApplicationCategory] = useState<'normal' | 'startup' | 'wage-increase'>('normal')
   const [isInvoiceEligible, setIsInvoiceEligible] = useState(false)
   
+  // 入力モード選択用state
+  const [inputMode, setInputMode] = useState<'preset' | 'purpose' | 'manual' | null>(null)
+  
   const [selectedPurpose, setSelectedPurpose] = useState('')
   const [expenses, setExpenses] = useState<ExpenseItem[]>([])
   const [newExpense, setNewExpense] = useState({
@@ -41,6 +44,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
         setIsInvoiceEligible(data.isInvoiceEligible || false)
         setExpenses(data.expenses || [])
         setApplicationDeadline(data.applicationDeadline || '')
+        setInputMode(data.inputMode || null)
       } catch (e) {
         console.error('Failed to load saved data', e)
       }
@@ -55,6 +59,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       isInvoiceEligible,
       expenses,
       applicationDeadline,
+      inputMode,
       lastSaved: new Date().toISOString()
     }
     localStorage.setItem('expensePlannerData', JSON.stringify(data))
@@ -368,8 +373,81 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
         </div>
       </section>
 
+      {/* 入力モード選択 */}
+      {!inputMode && (
+        <section className="planner-section mode-selection">
+          <h2>🎯 経費入力方法を選択してください</h2>
+          <p className="section-description">3つの入力方法からお好みの方法をお選びください</p>
+          
+          <div className="mode-selection-grid">
+            <div className="mode-card" onClick={() => setInputMode('preset')}>
+              <div className="mode-icon">📊</div>
+              <h3>全てお任せプラン</h3>
+              <p>申請枠に最適化されたプランを一括適用</p>
+              <ul className="mode-features">
+                <li>✅ 最適な経費項目を自動設定</li>
+                <li>✅ 税込金額を自動計算</li>
+                <li>✅ 補助上限額に合わせた設計</li>
+              </ul>
+              <button className="btn-select-mode">このモードを選ぶ</button>
+            </div>
+
+            <div className="mode-card" onClick={() => setInputMode('purpose')}>
+              <div className="mode-icon">💡</div>
+              <h3>目的別おすすめ経費</h3>
+              <p>実現したい目的に合わせた経費を提案</p>
+              <ul className="mode-features">
+                <li>✅ 6つの目的から選択</li>
+                <li>✅ 目的に合った経費を提案</li>
+                <li>✅ 必要な項目を選んで追加</li>
+              </ul>
+              <button className="btn-select-mode">このモードを選ぶ</button>
+            </div>
+
+            <div className="mode-card" onClick={() => setInputMode('manual')}>
+              <div className="mode-icon">✏️</div>
+              <h3>自由に経費を追加</h3>
+              <p>カテゴリーを選んで自由に入力</p>
+              <ul className="mode-features">
+                <li>✅ 10カテゴリーから自由選択</li>
+                <li>✅ 詳細な金額設定が可能</li>
+                <li>✅ カスタマイズ性が高い</li>
+              </ul>
+              <button className="btn-select-mode">このモードを選ぶ</button>
+            </div>
+          </div>
+
+          <div className="mode-selection-note">
+            💡 いつでもモードを変更できます。下書き保存すると選択したモードも保存されます。
+          </div>
+        </section>
+      )}
+
+      {/* モード変更ボタン */}
+      {inputMode && (
+        <div className="mode-change-bar">
+          <span className="current-mode">
+            {inputMode === 'preset' && '📊 全てお任せプラン'}
+            {inputMode === 'purpose' && '💡 目的別おすすめ経費'}
+            {inputMode === 'manual' && '✏️ 自由に経費を追加'}
+            モードで入力中
+          </span>
+          <button 
+            className="btn-change-mode"
+            onClick={() => {
+              if (confirm('入力モードを変更しますか？\n※既存の経費は保持されます')) {
+                setInputMode(null)
+              }
+            }}
+          >
+            入力モードを変更
+          </button>
+        </div>
+      )}
+
       {/* 全てお任せプラン */}
-      <section className="planner-section preset-plans">
+      {inputMode === 'preset' && (
+        <section className="planner-section preset-plans">
         <h2><TrendingUp size={24} /> 全てお任せプラン</h2>
         <p className="section-description">申請枠に最適化された経費プランを一括適用できます</p>
         
@@ -432,9 +510,11 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
           })()}
         </div>
       </section>
+      )}
 
       {/* 目的別おすすめ */}
-      <section className="planner-section recommendations">
+      {inputMode === 'purpose' && (
+        <section className="planner-section recommendations">
         <h2><Lightbulb size={24} /> 目的別おすすめ経費</h2>
         <p className="section-description">実現したいことを選ぶと、おすすめの経費項目が表示されます</p>
         
@@ -478,9 +558,11 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
           </div>
         )}
       </section>
+      )}
 
       {/* 経費追加フォーム */}
-      <section className="planner-section add-expense">
+      {inputMode === 'manual' && (
+        <section className="planner-section add-expense">
         <h2><Plus size={24} /> 経費を追加</h2>
         
         <div className="category-help">
@@ -545,6 +627,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
           </div>
         </div>
       </section>
+      )}
 
       {/* 登録済み経費一覧 */}
       {expenses.length > 0 && (

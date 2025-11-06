@@ -11,9 +11,12 @@ interface ExpensePlannerProps {
   onComplete: (expenses: ExpenseItem[], totalExpense: number, subsidyInfo: any) => void
   readOnly?: boolean
   initialExpenses?: ExpenseItem[]
+  username: string
+  draftDataToLoad?: any
+  onDraftLoaded?: () => void
 }
 
-const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
+const ExpensePlanner = ({ onComplete, username, draftDataToLoad, onDraftLoaded }: ExpensePlannerProps) => {
   const [businessName, setBusinessName] = useState('')
   const [applicationCategory, setApplicationCategory] = useState<'normal' | 'startup' | 'wage-increase'>('normal')
   const [isInvoiceEligible, setIsInvoiceEligible] = useState(false)
@@ -66,8 +69,50 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
     }
   }, [])
 
-  // LocalStorageに保存
-  const saveToLocalStorage = () => {
+  // 下書き読み込み
+  useEffect(() => {
+    if (draftDataToLoad) {
+      setBusinessName(draftDataToLoad.businessName || '')
+      setApplicationCategory(draftDataToLoad.applicationCategory || 'normal')
+      setIsInvoiceEligible(draftDataToLoad.isInvoiceEligible || false)
+      setExpenses(draftDataToLoad.expenses || [])
+      setInputMode(draftDataToLoad.inputMode || null)
+      setCompanyType(draftDataToLoad.companyType || 'corporation')
+      setBusinessPeriod(draftDataToLoad.businessPeriod || 'second-year-plus')
+      setHasGbizId(draftDataToLoad.hasGbizId !== undefined ? draftDataToLoad.hasGbizId : true)
+      
+      if (onDraftLoaded) {
+        onDraftLoaded()
+      }
+    }
+  }, [draftDataToLoad, onDraftLoaded])
+
+  // LocalStorageに保存（旧形式 - 互換性のため残す）
+  // const saveToLocalStorage = () => {
+  //   const data = {
+  //     businessName,
+  //     applicationCategory,
+  //     isInvoiceEligible,
+  //     expenses,
+  //     inputMode,
+  //     companyType,
+  //     businessPeriod,
+  //     hasGbizId,
+  //     lastSaved: new Date().toISOString()
+  //   }
+  //   localStorage.setItem('expensePlannerData', JSON.stringify(data))
+  //   alert('💾 一時保存しました！')
+  // }
+
+  // 下書きとして保存（新形式 - タイトル付き、ユーザーごと管理）
+  const saveDraft = () => {
+    const title = prompt('下書きのタイトルを入力してください\n（例：飲食店改装計画、EC開始プラン、2025年春申請用）')
+    
+    if (!title || !title.trim()) {
+      alert('タイトルが入力されませんでした')
+      return
+    }
+
     const data = {
       businessName,
       applicationCategory,
@@ -76,11 +121,42 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       inputMode,
       companyType,
       businessPeriod,
-      hasGbizId,
-      lastSaved: new Date().toISOString()
+      hasGbizId
     }
-    localStorage.setItem('expensePlannerData', JSON.stringify(data))
-    alert('💾 下書きを保存しました！')
+
+    const draft = {
+      id: `draft_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: title.trim(),
+      username: username,
+      data: data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    // 既存の下書き一覧を取得
+    const allDraftsKey = 'expenseDrafts'
+    const existingDraftsJson = localStorage.getItem(allDraftsKey)
+    let allDrafts = []
+    
+    if (existingDraftsJson) {
+      try {
+        allDrafts = JSON.parse(existingDraftsJson)
+      } catch (e) {
+        console.error('Failed to parse existing drafts', e)
+      }
+    }
+
+    // 新しい下書きを追加
+    allDrafts.push(draft)
+    
+    // LocalStorageに保存
+    try {
+      localStorage.setItem(allDraftsKey, JSON.stringify(allDrafts))
+      alert(`💾 下書き「${title.trim()}」を保存しました！\n\nヘッダーの「下書き一覧」ボタンから読み込めます。`)
+    } catch (e) {
+      alert('下書きの保存に失敗しました。ストレージ容量を確認してください。')
+      console.error('Failed to save draft', e)
+    }
   }
 
   // 目的別おすすめ経費
@@ -409,8 +485,8 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
         <h1>💰 補助金経費項目プランナー</h1>
         <p>あなたの目的に合った経費項目を簡単に選択・計算できます</p>
         <div className="header-actions">
-          <button onClick={saveToLocalStorage} className="btn-save">
-            <Save size={18} /> 下書き保存
+          <button onClick={saveDraft} className="btn-save">
+            <Save size={18} /> 下書きを保存
           </button>
           <button onClick={showPDFPreview} className="btn-preview" disabled={expenses.length === 0}>
             <Info size={18} /> PDFプレビュー

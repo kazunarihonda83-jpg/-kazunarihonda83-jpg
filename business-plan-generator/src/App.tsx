@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
-import { FileText, LogOut } from 'lucide-react'
+import { FileText, LogOut, FolderOpen } from 'lucide-react'
 import './App.css'
 import ExpensePlanner from './components/ExpensePlanner'
 import Login from './components/Login'
+import DraftList from './components/DraftList'
 import type { ExpenseItem } from './types/BusinessPlan'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState('')
   const [isCompleted, setIsCompleted] = useState(false)
+  const [showDraftList, setShowDraftList] = useState(false)
+  const [draftDataToLoad, setDraftDataToLoad] = useState<any>(null)
   const [expenseData, setExpenseData] = useState<{
     expenses: ExpenseItem[]
     totalExpense: number
@@ -50,6 +53,11 @@ function App() {
     setExpenseData(null)
   }
 
+  const handleLoadDraft = (data: any) => {
+    setDraftDataToLoad(data)
+    setShowDraftList(false)
+  }
+
   // ログインしていない場合はログイン画面を表示
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} />
@@ -64,6 +72,10 @@ function App() {
           <p>小規模事業者持続化補助金 - 経費計画サポートツール</p>
         </div>
         <div className="header-user">
+          <button onClick={() => setShowDraftList(true)} className="btn-draft-list">
+            <FolderOpen size={18} />
+            下書き一覧
+          </button>
           <span className="username">👤 {username}</span>
           <button onClick={handleLogout} className="btn-logout">
             <LogOut size={18} />
@@ -74,7 +86,12 @@ function App() {
 
       <main className="app-main">
         <div style={{ display: isCompleted ? 'none' : 'block' }}>
-          <ExpensePlanner onComplete={handleComplete} />
+          <ExpensePlanner 
+            onComplete={handleComplete}
+            username={username}
+            draftDataToLoad={draftDataToLoad}
+            onDraftLoaded={() => setDraftDataToLoad(null)}
+          />
         </div>
         
         {isCompleted && (
@@ -144,6 +161,14 @@ function App() {
       <footer className="app-footer">
         <p>© 2024 補助金経費項目プランナー - あなたの事業成長をサポート</p>
       </footer>
+
+      {showDraftList && (
+        <DraftList
+          username={username}
+          onLoadDraft={handleLoadDraft}
+          onClose={() => setShowDraftList(false)}
+        />
+      )}
     </div>
   )
 }

@@ -134,6 +134,34 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       total: 1743500,
       expectedSubsidy: 1000000
     },
+    'startup': {
+      name: '創業枠プラン',
+      description: '上限200万円の創業枠プラン',
+      items: [
+        { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
+        { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
+        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: '広報費', description: 'DM発送（10,000部）', amount: 1500000, note: '※税別：1,500,000円' }
+      ],
+      subtotal: 3000000,
+      tax: 300000,
+      total: 3300000,
+      expectedSubsidy: 2000000
+    },
+    'startup-invoice': {
+      name: '創業枠＋インボイス特例利用枠',
+      description: '上限250万円（200万円＋50万円）のプラン',
+      items: [
+        { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
+        { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
+        { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
+        { category: '広報費', description: 'DM発送（15,000部）', amount: 2250000, note: '※税別：2,250,000円' }
+      ],
+      subtotal: 3750000,
+      tax: 375000,
+      total: 4125000,
+      expectedSubsidy: 2500000
+    },
     'wage-increase': {
       name: '賃金引上げ枠プラン',
       description: '上限200万円の賃金引上げ枠プラン',
@@ -305,6 +333,8 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
   const getCurrentPlanKey = () => {
     if (applicationCategory === 'normal') {
       return isInvoiceEligible ? 'normal-invoice' : 'normal'
+    } else if (applicationCategory === 'startup') {
+      return isInvoiceEligible ? 'startup-invoice' : 'startup'
     } else if (applicationCategory === 'wage-increase') {
       return isInvoiceEligible ? 'wage-increase-invoice' : 'wage-increase'
     }
@@ -502,7 +532,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                 </button>
                 
                 <div className="preset-plan-note">
-                  💡 このプランは現在の申請枠（{applicationCategory === 'normal' ? '通常枠' : '賃金引上げ枠'}）
+                  💡 このプランは現在の申請枠（{applicationCategory === 'normal' ? '通常枠' : applicationCategory === 'startup' ? '創業枠' : '賃金引上げ枠'}）
                   {isInvoiceEligible && '＋インボイス特例'}に最適化されています
                 </div>
               </>

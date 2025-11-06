@@ -238,6 +238,8 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
     const totalExpense = expenses.reduce((sum, exp) => sum + exp.amount, 0)
     const quarterLimit = totalExpense * 0.25
     const absoluteLimit = 500000
+    
+    // 総経費の1/4をチェックし、上限は50万円
     const limit = Math.min(quarterLimit, absoluteLimit)
     
     return {
@@ -740,7 +742,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                 <span className={`value ${websiteCheck.isOver ? 'error' : ''}`}>{websiteCheck.percentage}%</span>
               </div>
               <div className="website-check-row">
-                <span className="label">上限額（総額の1/4）:</span>
+                <span className="label">上限額（総額の1/4、最大50万円）:</span>
                 <span className="value">¥{Math.floor(websiteCheck.limit).toLocaleString()}</span>
               </div>
               {websiteCheck.isOver ? (
@@ -748,7 +750,8 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                   <AlertTriangle size={20} />
                   <div>
                     <strong>⚠️ 警告：ウェブサイト関連費が上限を超えています！</strong>
-                    <p>ウェブサイト関連費は総額の1/4（25%）までしか補助対象になりません。</p>
+                    <p>ウェブサイト関連費は総額の1/4（25%）まで、かつ最大50万円までしか補助対象になりません。</p>
+                    <p>現在: ¥{websiteCheck.websiteFeeTotal.toLocaleString()} / 上限: ¥{Math.floor(websiteCheck.limit).toLocaleString()}</p>
                     <p>超過分: ¥{(websiteCheck.websiteFeeTotal - websiteCheck.limit).toLocaleString()}</p>
                   </div>
                 </div>
@@ -757,6 +760,7 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                   <Info size={20} />
                   <div>
                     <strong>✅ ウェブサイト関連費は上限内です</strong>
+                    <p>現在: ¥{websiteCheck.websiteFeeTotal.toLocaleString()} / 上限: ¥{Math.floor(websiteCheck.limit).toLocaleString()}</p>
                     <p>あと ¥{Math.floor(websiteCheck.limit - websiteCheck.websiteFeeTotal).toLocaleString()} まで追加できます。</p>
                   </div>
                 </div>
@@ -1132,8 +1136,9 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
                     <div style={{ marginBottom: '25px', padding: '15px', background: check.isOver ? '#fee2e2' : '#d1fae5', borderRadius: '8px', border: check.isOver ? '2px solid #ef4444' : '2px solid #10b981' }}>
                       <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ウェブサイト関連費チェック</h3>
                       <p style={{ fontSize: '13px', marginBottom: '5px' }}>ウェブサイト関連費合計: ¥{check.websiteFeeTotal.toLocaleString()} ({check.percentage}%)</p>
+                      <p style={{ fontSize: '13px', marginBottom: '5px' }}>上限: 総額の1/4、かつ最大50万円（¥{Math.floor(check.limit).toLocaleString()}）</p>
                       <p style={{ fontSize: '13px', color: check.isOver ? '#991b1b' : '#065f46' }}>
-                        {check.isOver ? `⚠️ 警告: 上限を超えています（上限: ¥${Math.floor(check.limit).toLocaleString()}）` : `✓ 上限内です（上限: ¥${Math.floor(check.limit).toLocaleString()}）`}
+                        {check.isOver ? `⚠️ 警告: 上限を超えています` : `✓ 上限内です（残り: ¥${Math.floor(check.limit - check.websiteFeeTotal).toLocaleString()}）`}
                       </p>
                     </div>
                   )
@@ -1228,8 +1233,9 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
             <div style={{ marginBottom: '25px', padding: '15px', background: check.isOver ? '#fee2e2' : '#d1fae5', borderRadius: '8px', border: check.isOver ? '2px solid #ef4444' : '2px solid #10b981' }}>
               <h3 style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '10px' }}>ウェブサイト関連費チェック</h3>
               <p style={{ fontSize: '13px', marginBottom: '5px' }}>ウェブサイト関連費合計: ¥{check.websiteFeeTotal.toLocaleString()} ({check.percentage}%)</p>
+              <p style={{ fontSize: '13px', marginBottom: '5px' }}>上限: 総額の1/4、かつ最大50万円（¥{Math.floor(check.limit).toLocaleString()}）</p>
               <p style={{ fontSize: '13px', color: check.isOver ? '#991b1b' : '#065f46' }}>
-                {check.isOver ? `⚠️ 警告: 上限を超えています（上限: ¥${Math.floor(check.limit).toLocaleString()}）` : `✓ 上限内です（上限: ¥${Math.floor(check.limit).toLocaleString()}）`}
+                {isOverLimit ? `⚠️ 警告: 上限を超えています` : `✓ 上限内です（残り: ¥${Math.floor(effectiveLimit - check.websiteFeeTotal).toLocaleString()}）`}
               </p>
             </div>
           )

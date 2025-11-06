@@ -113,15 +113,15 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       items: [
         { category: '広報費', description: 'LP作成（1個）', amount: 187500, note: '※税別：187,500円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 300000, note: '※税別：300,000円' },
-        { category: '広報費', description: 'DM発送（1,000部）', amount: 150000, note: '※税別：150,000円' }
+        { category: '広報費', description: 'DM発送（1,750部）', amount: 262500, note: '※税別：262,500円' }
       ],
-      subtotal: 637500,
-      tax: 63750,
-      total: 701250,
-      expectedSubsidy: 467500
+      subtotal: 750000,
+      tax: 75000,
+      total: 825000,
+      expectedSubsidy: 500000
     },
     'normal-invoice': {
-      name: '通常枠＋インボイス特例',
+      name: 'インボイス特例利用枠',
       description: '上限100万円（50万円＋50万円）のプラン',
       items: [
         { category: '広報費', description: 'メニュー表作成（1個）', amount: 260000, note: '※税別：260,000円' },
@@ -135,31 +135,31 @@ const ExpensePlanner = ({ onComplete }: ExpensePlannerProps) => {
       expectedSubsidy: 1000000
     },
     'wage-increase': {
-      name: '賃上げ枠プラン',
-      description: '上限200万円の賃上げ枠プラン',
+      name: '賃金引上げ枠プラン',
+      description: '上限200万円の賃金引上げ枠プラン',
       items: [
-        { category: '広報費', description: 'メニュー表作成（1個）', amount: 260000, note: '※税別：260,000円' },
+        { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
         { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
         { category: '広報費', description: 'DM発送（10,000部）', amount: 1500000, note: '※税別：1,500,000円' }
       ],
-      subtotal: 3010000,
-      tax: 301000,
-      total: 3311000,
+      subtotal: 3000000,
+      tax: 300000,
+      total: 3300000,
       expectedSubsidy: 2000000
     },
     'wage-increase-invoice': {
-      name: '賃上げ枠＋インボイス特例',
+      name: '賃金引上げ枠＋インボイス特例利用枠',
       description: '上限250万円（200万円＋50万円）のプラン',
       items: [
-        { category: '広報費', description: 'メニュー表作成（1個）', amount: 260000, note: '※税別：260,000円' },
+        { category: '広報費', description: 'メニュー表作成（1個）', amount: 250000, note: '※税別：250,000円' },
         { category: '広報費', description: 'チラシ制作（4個）', amount: 500000, note: '※税別：500,000円' },
         { category: '広報費', description: 'LP作成（1個）', amount: 750000, note: '※税別：750,000円' },
         { category: '広報費', description: 'DM発送（15,000部）', amount: 2250000, note: '※税別：2,250,000円' }
       ],
-      subtotal: 3760000,
-      tax: 376000,
-      total: 4136000,
+      subtotal: 3750000,
+      tax: 375000,
+      total: 4125000,
       expectedSubsidy: 2500000
     }
   }

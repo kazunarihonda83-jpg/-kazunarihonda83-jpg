@@ -88,23 +88,6 @@ const Login = ({ onLogin }: LoginProps) => {
             ログイン
           </button>
         </form>
-
-        <div className="login-footer">
-          <div className="demo-info">
-            <h3>デモアカウント</h3>
-            <div className="demo-accounts">
-              <div className="demo-account">
-                <strong>ユーザー名:</strong> admin<br />
-                <strong>パスワード:</strong> admin123
-              </div>
-              <div className="demo-account">
-                <strong>ユーザー名:</strong> demo<br />
-                <strong>パスワード:</strong> demo2024
-              </div>
-            </div>
-          </div>
-          <p className="login-note">※本番環境では必ずバックエンド認証を実装してください</p>
-        </div>
       </div>
     </div>
   )

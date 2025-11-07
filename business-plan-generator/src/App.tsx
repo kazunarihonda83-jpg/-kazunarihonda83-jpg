@@ -97,7 +97,7 @@ function App() {
         {isCompleted && (
           <div className="completion-screen">
             <div className="success-message">
-              <h2>✅ 経費計画が完了しました！</h2>
+              <h2>✅ 必要書類チェック</h2>
               <div className="summary-card">
                 <div className="summary-row">
                   <span>登録した経費項目:</span>

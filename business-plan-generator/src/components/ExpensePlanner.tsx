@@ -1196,7 +1196,7 @@ const ExpensePlanner = ({ onComplete, username, draftDataToLoad, onDraftLoaded }
           className="btn-complete"
           disabled={expenses.length === 0}
         >
-          経費計画を完了する
+          必要書類をチェックする
         </button>
       </div>
 

@@ -146,14 +146,14 @@ const BusinessPlanPreview = ({ data, onBack }: BusinessPlanPreviewProps) => {
       y += 6
       doc.text(`   ${exp.description}`, margin, y)
       y += 6
-      doc.text(`   Kingaku: ${exp.amount.toLocaleString()}yen`, margin, y)
+      doc.text(`   金額: ¥${exp.amount.toLocaleString()}`, margin, y)
       y += 8
     })
     
     y += 5
-    doc.text(`Gokei: ${data.totalExpense.toLocaleString()}yen`, margin, y)
+    doc.text(`合計: ¥${data.totalExpense.toLocaleString()}`, margin, y)
     y += 6
-    doc.text(`Yoso Jukyugaku: ${data.expectedSubsidy.toLocaleString()}yen`, margin, y)
+    doc.text(`予想受給額: ¥${data.expectedSubsidy.toLocaleString()}`, margin, y)
 
     // PDFを保存
     doc.save(`jigyou-keikakusho-${data.businessName}.pdf`)

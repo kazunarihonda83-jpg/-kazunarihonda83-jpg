@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, Calculator, Lightbulb, TrendingUp, DollarSign, Download, Save, Info, AlertTriangle, Calendar } from 'lucide-react'
+import { Plus, Trash2, Calculator, Lightbulb, TrendingUp, Download, Save, Info, AlertTriangle, Calendar, BadgeJapaneseYen } from 'lucide-react'
 import type { ExpenseItem } from '../types/BusinessPlan'
 import { expenseCategories } from '../types/BusinessPlan'
 import { expenseCategoryDetails } from '../types/ExpenseDetails'
@@ -955,7 +955,7 @@ const ExpensePlanner = ({ onComplete, username, draftDataToLoad, onDraftLoaded }
               <span className="value">¥{subsidyInfo.subsidyLimit.toLocaleString()}</span>
             </div>
             <div className="result-row major">
-              <span className="label"><DollarSign size={20} /> 予想受給額:</span>
+              <span className="label"><BadgeJapaneseYen size={20} /> 予想受給額:</span>
               <span className="value large">¥{subsidyInfo.expectedSubsidy.toLocaleString()}</span>
             </div>
             <div className="result-row">

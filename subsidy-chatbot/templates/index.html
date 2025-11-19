@@ -253,6 +253,60 @@
         }
 
         .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .top-controls {
+            background: white;
+            border-radius: 8px;
+            padding: 15px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .category-dropdown-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .category-dropdown-wrapper label {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+        
+        .category-dropdown {
+            flex: 1;
+            max-width: 400px;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: #374151;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .category-dropdown:hover {
+            border-color: #1a56db;
+        }
+        
+        .category-dropdown:focus {
+            outline: none;
+            border-color: #1a56db;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+        
+        .content-wrapper {
             display: grid;
             grid-template-columns: 280px 1fr;
             gap: 30px;
@@ -853,43 +907,48 @@
 
     <div class="container">
         <div class="main-content">
-            <div class="sidebar">
-                <div class="sidebar-section">
-                    <h2>💡 よくある質問 TOP10</h2>
-                    <ul class="top10-list" id="top10List">
-                        <div class="no-data">読み込み中...</div>
-                    </ul>
-                </div>
-
-                <div class="sidebar-section">
-                    <h2>🏷️ タグで探す</h2>
-                    <div class="tag-cloud" id="tagCloud">
-                        <div class="no-data">読み込み中...</div>
-                    </div>
-                </div>
-
-                <div class="sidebar-section">
-                    <h2>カテゴリー</h2>
-                    <ul class="category-list" id="categoryList">
-                    </ul>
-                </div>
-
-                <div class="sidebar-section" id="historySection">
-                    <h2>検索履歴</h2>
-                    <ul class="history-list" id="historyList">
-                        <div class="login-required-message">ログインすると履歴が保存されます</div>
-                    </ul>
-                </div>
-
-                <div class="sidebar-section" id="favoriteSection">
-                    <h2>お気に入り</h2>
-                    <ul class="favorite-list" id="favoriteList">
-                        <div class="login-required-message">ログインするとお気に入りが保存できます</div>
-                    </ul>
+            <!-- カテゴリードロップダウン（上部） -->
+            <div class="top-controls">
+                <div class="category-dropdown-wrapper">
+                    <label for="categoryDropdown">📁 カテゴリー：</label>
+                    <select class="category-dropdown" id="categoryDropdown">
+                        <option value="">すべてのカテゴリー</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="main-area">
+            <div class="content-wrapper">
+                <div class="sidebar">
+                    <div class="sidebar-section">
+                        <h2>💡 よくある質問 TOP10</h2>
+                        <ul class="top10-list" id="top10List">
+                            <div class="no-data">読み込み中...</div>
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h2>🏷️ タグで探す</h2>
+                        <div class="tag-cloud" id="tagCloud">
+                            <div class="no-data">読み込み中...</div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section" id="historySection">
+                        <h2>検索履歴</h2>
+                        <ul class="history-list" id="historyList">
+                            <div class="login-required-message">ログインすると履歴が保存されます</div>
+                        </ul>
+                    </div>
+
+                    <div class="sidebar-section" id="favoriteSection">
+                        <h2>お気に入り</h2>
+                        <ul class="favorite-list" id="favoriteList">
+                            <div class="login-required-message">ログインするとお気に入りが保存できます</div>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="main-area">
                 <div class="search-area">
                     <div class="breadcrumb" id="breadcrumb" style="display: none;">
                         <a href="#" onclick="clearMessages(); return false;">ホーム</a>
@@ -922,6 +981,7 @@
                     <div class="spinner"></div>
                     <p style="color: #6b7280;">検索中...</p>
                 </div>
+            </div>
             </div>
         </div>
     </div>

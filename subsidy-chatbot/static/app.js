@@ -9,6 +9,7 @@ const clearButton = document.getElementById('clearButton');
 const messages = document.getElementById('messages');
 const loading = document.getElementById('loading');
 const categoryList = document.getElementById('categoryList');
+const categoryDropdown = document.getElementById('categoryDropdown');
 const historyList = document.getElementById('historyList');
 const favoriteList = document.getElementById('favoriteList');
 const quickQuestions = document.getElementById('quickQuestions');
@@ -544,24 +545,41 @@ async function loadCategories() {
         const response = await fetch(`${API_BASE}/api/categories`);
         const data = await response.json();
         
-        categoryList.innerHTML = '';
+        // ドロップダウンに追加
+        categoryDropdown.innerHTML = '<option value="">すべてのカテゴリー</option>';
         data.categories.forEach(category => {
-            const li = document.createElement('li');
-            li.className = 'category-item';
-            li.innerHTML = `
-                <span>${category.name}</span>
-                <span class="category-count">${category.count}</span>
-            `;
-            li.onclick = () => loadCategoryDetail(category.id, category.name);
-            categoryList.appendChild(li);
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = `${category.name} (${category.count})`;
+            categoryDropdown.appendChild(option);
         });
     } catch (error) {
         console.error('カテゴリーの読み込みに失敗しました:', error);
     }
 }
 
+// カテゴリードロップダウンの変更イベント
+function handleCategoryChange() {
+    const selectedCategoryId = categoryDropdown.value;
+    
+    if (!selectedCategoryId) {
+        // すべてのカテゴリー選択時は初期画面に戻る
+        clearMessages();
+        return;
+    }
+    
+    // 選択されたカテゴリーの名前を取得
+    const selectedOption = categoryDropdown.options[categoryDropdown.selectedIndex];
+    const categoryName = selectedOption.textContent.replace(/\s*\(\d+\)$/, '');
+    
+    loadCategoryDetail(selectedCategoryId, categoryName);
+}
+
 async function loadCategoryDetail(categoryId, categoryName) {
     try {
+        // パンくずリストを更新
+        updateBreadcrumb('カテゴリー', categoryName);
+        
         messages.innerHTML = `
             <div class="message-group">
                 <div class="user-message">
@@ -764,11 +782,12 @@ function renderResultItems(results) {
 
 function clearMessages() {
     clearBreadcrumb();
+    categoryDropdown.value = ''; // ドロップダウンをリセット
     messages.innerHTML = `
         <div class="welcome-message">
             <h2>業務改善助成金Q&A</h2>
             <p>業務改善助成金に関するご質問にお答えします</p>
-            <p>検索ボックスに質問を入力するか、左のメニューからお選びください</p>
+            <p>検索ボックスに質問を入力するか、上部のカテゴリーや左のメニューからお選びください</p>
         </div>
     `;
 }
@@ -804,6 +823,9 @@ searchInput.addEventListener('focus', (e) => {
 });
 
 clearButton.addEventListener('click', clearMessages);
+
+// カテゴリードロップダウンの変更イベント
+categoryDropdown.addEventListener('change', handleCategoryChange);
 
 // モーダル外クリックで閉じる
 authModal.addEventListener('click', (e) => {

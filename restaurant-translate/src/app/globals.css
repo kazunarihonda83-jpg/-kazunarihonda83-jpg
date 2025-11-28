@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* カスタムスタイル */
+.menu-card {
+  @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+}
+
+.language-selector {
+  @apply px-4 py-2 bg-white border border-gray-300 rounded-lg hover:border-primary-500 transition-colors;
+}
+
+.allergy-badge {
+  @apply inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800;
+}
+
+.dietary-badge {
+  @apply inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800;
+}
+
+.price-tag {
+  @apply text-2xl font-bold text-primary-600;
+}
+
+/* QRコード表示用 */
+.qr-container {
+  @apply flex items-center justify-center p-8 bg-white rounded-lg shadow-lg;
+}
+
+/* 印刷時の最適化 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .menu-card {
+    @apply shadow-none border border-gray-300;
+  }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 640px) {
+  .price-tag {
+    @apply text-xl;
+  }
+}

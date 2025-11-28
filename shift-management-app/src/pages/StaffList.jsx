@@ -9,7 +9,7 @@ import {
   Shield,
   Mail,
   Phone,
-  DollarSign,
+  Coins,
   Calendar,
   CheckCircle,
   XCircle,
@@ -390,7 +390,7 @@ const StaffList = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
-                        <DollarSign className="w-4 h-4 mr-1 text-gray-400" />
+                        <Coins className="w-4 h-4 mr-1 text-gray-400" />
                         {staff.hourly_wage?.toLocaleString()}円
                       </div>
                     </td>

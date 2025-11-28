@@ -6,7 +6,7 @@ import {
   TrendingUp,
   Users,
   Clock,
-  DollarSign,
+  Coins,
   Download,
   Calendar,
   BarChart3,
@@ -265,7 +265,7 @@ const Reports = () => {
                 ¥{laborCost.totalCost.toLocaleString()}
               </p>
             </div>
-            <DollarSign className="w-12 h-12 text-green-600" />
+            <Coins className="w-12 h-12 text-green-600" />
           </div>
         </div>
 
@@ -434,7 +434,7 @@ const Reports = () => {
       {reportType === 'cost' && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center space-x-2">
-            <DollarSign className="w-6 h-6 text-green-600" />
+            <Coins className="w-6 h-6 text-green-600" />
             <span>人件費分析</span>
           </h2>
 

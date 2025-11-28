@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Calendar, ClipboardList, Clock, BarChart3, Users, Star, LogOut, FileText } from 'lucide-react';
+import { Home, Calendar, ClipboardList, Clock, BarChart3, Users, Star, LogOut, FileText, CheckSquare } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 
 const Layout = ({ children }) => {
@@ -16,6 +16,7 @@ const Layout = ({ children }) => {
     { path: '/dashboard', label: 'ダッシュボード', icon: Home },
     { path: '/shifts/calendar', label: 'シフトカレンダー', icon: Calendar },
     ...(isManager() ? [{ path: '/shifts/management', label: 'シフト管理', icon: ClipboardList }] : []),
+    ...(isManager() ? [{ path: '/shifts/approval', label: 'シフト希望承認', icon: CheckSquare }] : []),
     ...(!isManager() ? [{ path: '/shifts/request', label: 'シフト希望提出', icon: FileText }] : []),
     { path: '/attendance', label: '勤怠管理', icon: Clock },
     { path: '/evaluations', label: '評価管理', icon: Star },

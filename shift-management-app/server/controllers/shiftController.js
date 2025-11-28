@@ -225,9 +225,11 @@ function generateOptimalShifts(storeId, staff, requests, startDate, endDate, pos
       const staffMember = availableStaff.find(s => s.id === request.user_id);
       if (!staffMember) return;
       
+      // If time is not specified, use default based on shift count
       const startTime = request.preferred_start_time || (shifts.filter(s => s.shiftDate === dateStr).length < shiftsNeeded / 2 ? '09:00' : '17:00');
       const endTime = request.preferred_end_time || (startTime === '09:00' ? '14:00' : '22:00');
-      const positionId = request.preferred_position_id || positions[0]?.id;
+      // Assign position based on staff index
+      const positionId = positions[0]?.id;
       
       shifts.push({
         id: randomUUID(),

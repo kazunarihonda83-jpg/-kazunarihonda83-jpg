@@ -11,12 +11,9 @@ export const getShiftRequests = (req, res) => {
         sr.*,
         u.first_name || ' ' || u.last_name as user_name,
         u.email as user_email,
-        p.name as position_name,
-        p.color as position_color,
         approver.first_name || ' ' || approver.last_name as approved_by_name
       FROM shift_requests sr
       JOIN users u ON sr.user_id = u.id
-      LEFT JOIN positions p ON sr.preferred_position_id = p.id
       LEFT JOIN users approver ON sr.approved_by = approver.id
       WHERE 1=1
     `;
@@ -58,11 +55,9 @@ export const getShiftRequestById = (req, res) => {
     const stmt = db.prepare(`
       SELECT 
         sr.*,
-        u.first_name || ' ' || u.last_name as user_name,
-        p.name as position_name
+        u.first_name || ' ' || u.last_name as user_name
       FROM shift_requests sr
       JOIN users u ON sr.user_id = u.id
-      LEFT JOIN positions p ON sr.preferred_position_id = p.id
       WHERE sr.id = ?
     `);
     
@@ -89,9 +84,7 @@ export const createShiftRequest = (req, res) => {
       requestDate,
       preferredStartTime,
       preferredEndTime,
-      preferredPositionId,
       availability,
-      priority,
       notes
     } = req.body;
     
@@ -116,15 +109,15 @@ export const createShiftRequest = (req, res) => {
     const stmt = db.prepare(`
       INSERT INTO shift_requests (
         id, user_id, store_id, request_month, request_date,
-        preferred_start_time, preferred_end_time, preferred_position_id,
-        availability, priority, notes, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+        preferred_start_time, preferred_end_time,
+        availability, notes, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
     `);
     
     stmt.run(
       id, userId, storeId, requestMonth, requestDate,
-      preferredStartTime, preferredEndTime, preferredPositionId,
-      availability, priority, notes, now, now
+      preferredStartTime, preferredEndTime,
+      availability, notes, now, now
     );
     
     // Return created request
@@ -151,9 +144,9 @@ export const createBulkShiftRequests = (req, res) => {
     const insertStmt = db.prepare(`
       INSERT INTO shift_requests (
         id, user_id, store_id, request_month, request_date,
-        preferred_start_time, preferred_end_time, preferred_position_id,
-        availability, priority, notes, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+        preferred_start_time, preferred_end_time,
+        availability, notes, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
     `);
     
     const createdIds = [];
@@ -164,8 +157,8 @@ export const createBulkShiftRequests = (req, res) => {
         const id = uuidv4();
         insertStmt.run(
           id, userId, storeId, requestMonth, req.requestDate,
-          req.preferredStartTime, req.preferredEndTime, req.preferredPositionId,
-          req.availability || 'available', req.priority || 1, req.notes,
+          req.preferredStartTime, req.preferredEndTime,
+          req.availability || 'available', req.notes,
           now, now
         );
         createdIds.push(id);
@@ -194,9 +187,7 @@ export const updateShiftRequest = (req, res) => {
     const {
       preferredStartTime,
       preferredEndTime,
-      preferredPositionId,
       availability,
-      priority,
       notes,
       status
     } = req.body;
@@ -207,9 +198,7 @@ export const updateShiftRequest = (req, res) => {
       UPDATE shift_requests
       SET preferred_start_time = COALESCE(?, preferred_start_time),
           preferred_end_time = COALESCE(?, preferred_end_time),
-          preferred_position_id = COALESCE(?, preferred_position_id),
           availability = COALESCE(?, availability),
-          priority = COALESCE(?, priority),
           notes = COALESCE(?, notes),
           status = COALESCE(?, status),
           updated_at = ?
@@ -217,8 +206,8 @@ export const updateShiftRequest = (req, res) => {
     `);
     
     const result = stmt.run(
-      preferredStartTime, preferredEndTime, preferredPositionId,
-      availability, priority, notes, status, now, id
+      preferredStartTime, preferredEndTime,
+      availability, notes, status, now, id
     );
     
     if (result.changes === 0) {

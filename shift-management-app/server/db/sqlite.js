@@ -151,9 +151,7 @@ db.exec(`
     request_date TEXT NOT NULL,
     preferred_start_time TEXT,
     preferred_end_time TEXT,
-    preferred_position_id TEXT,
     availability TEXT DEFAULT 'available',
-    priority INTEGER DEFAULT 1,
     notes TEXT,
     status TEXT DEFAULT 'pending',
     submitted_at TEXT,
@@ -163,7 +161,6 @@ db.exec(`
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (store_id) REFERENCES stores(id),
-    FOREIGN KEY (preferred_position_id) REFERENCES positions(id),
     FOREIGN KEY (approved_by) REFERENCES users(id)
   );
 

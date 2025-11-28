@@ -1,14 +1,20 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths, isSameMonth, isSameDay, addDays } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Edit2, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 import useAuthStore from '../store/useAuthStore';
-import { shiftAPI } from '../api/config';
+import { shiftAPI, positionAPI } from '../api/config';
 
 const ShiftCalendar = () => {
   const user = useAuthStore(state => state.user);
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('month'); // month, week, day
+  const [editingShift, setEditingShift] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const isAdmin = user?.role === 'admin';
 
   // Calculate date range based on view mode
   const getDateRange = () => {
@@ -27,7 +33,7 @@ const ShiftCalendar = () => {
 
   const { startDate, endDate } = getDateRange();
 
-  const { data: shifts = [], isLoading, refetch } = useQuery({
+  const { data: shifts = [], isLoading } = useQuery({
     queryKey: ['shifts', startDate, endDate],
     queryFn: async () => {
       const { data } = await shiftAPI.getShifts({
@@ -38,6 +44,68 @@ const ShiftCalendar = () => {
       return data;
     }
   });
+
+  const { data: positions = [] } = useQuery({
+    queryKey: ['positions', 'store-main'],
+    queryFn: async () => {
+      const { data } = await positionAPI.getPositions({ storeId: 'store-main' });
+      return data;
+    }
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (shiftId) => shiftAPI.deleteShift(shiftId),
+    onSuccess: () => {
+      toast.success('シフトを削除しました');
+      queryClient.invalidateQueries(['shifts']);
+    },
+    onError: () => {
+      toast.error('シフトの削除に失敗しました');
+    }
+  });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => shiftAPI.updateShift(id, data),
+    onSuccess: () => {
+      toast.success('シフトを更新しました');
+      queryClient.invalidateQueries(['shifts']);
+      setShowEditModal(false);
+      setEditingShift(null);
+    },
+    onError: () => {
+      toast.error('シフトの更新に失敗しました');
+    }
+  });
+
+  const handleEditClick = (shift, e) => {
+    e.stopPropagation();
+    setEditingShift(shift);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteClick = (shift, e) => {
+    e.stopPropagation();
+    if (window.confirm(`${shift.user_name}のシフト（${shift.shift_date} ${shift.start_time}-${shift.end_time}）を削除しますか？`)) {
+      deleteMutation.mutate(shift.id);
+    }
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    updateMutation.mutate({
+      id: editingShift.id,
+      data: {
+        startTime: formData.get('startTime'),
+        endTime: formData.get('endTime'),
+        breakMinutes: parseInt(formData.get('breakMinutes')),
+        positionId: formData.get('positionId'),
+        notes: formData.get('notes')
+      }
+    });
+  };
 
   const handlePrevious = () => {
     if (viewMode === 'month') {
@@ -97,12 +165,30 @@ const ShiftCalendar = () => {
                 {dayShifts.map(shift => (
                   <div
                     key={shift.id}
-                    className="text-xs p-1 rounded truncate"
+                    className="text-xs p-1 rounded truncate group relative"
                     style={{ backgroundColor: shift.position_color + '20', borderLeft: `3px solid ${shift.position_color}` }}
                   >
                     <div className="font-medium">{shift.user_name}</div>
                     <div className="text-gray-600">{shift.start_time}-{shift.end_time}</div>
                     <div className="text-gray-500">{shift.position_name}</div>
+                    {isAdmin && (
+                      <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 p-1 bg-white rounded shadow-sm">
+                        <button
+                          onClick={(e) => handleEditClick(shift, e)}
+                          className="p-1 hover:bg-blue-100 rounded"
+                          title="編集"
+                        >
+                          <Edit2 className="h-3 w-3 text-blue-600" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteClick(shift, e)}
+                          className="p-1 hover:bg-red-100 rounded"
+                          title="削除"
+                        >
+                          <Trash2 className="h-3 w-3 text-red-600" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -135,12 +221,30 @@ const ShiftCalendar = () => {
                   dayShifts.map(shift => (
                     <div
                       key={shift.id}
-                      className="p-2 rounded text-xs"
+                      className="p-2 rounded text-xs group relative"
                       style={{ backgroundColor: shift.position_color + '20', borderLeft: `3px solid ${shift.position_color}` }}
                     >
                       <div className="font-medium">{shift.user_name}</div>
                       <div className="text-gray-600">{shift.start_time}-{shift.end_time}</div>
                       <div className="text-gray-500">{shift.position_name}</div>
+                      {isAdmin && (
+                        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                          <button
+                            onClick={(e) => handleEditClick(shift, e)}
+                            className="p-1 hover:bg-blue-100 rounded bg-white shadow-sm"
+                            title="編集"
+                          >
+                            <Edit2 className="h-3 w-3 text-blue-600" />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteClick(shift, e)}
+                            className="p-1 hover:bg-red-100 rounded bg-white shadow-sm"
+                            title="削除"
+                          >
+                            <Trash2 className="h-3 w-3 text-red-600" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -185,7 +289,7 @@ const ShiftCalendar = () => {
                     {shiftsInSlot.map(shift => (
                       <div
                         key={shift.id}
-                        className="p-4 rounded-lg border"
+                        className="p-4 rounded-lg border group relative"
                         style={{ backgroundColor: shift.position_color + '10', borderColor: shift.position_color }}
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -201,6 +305,24 @@ const ShiftCalendar = () => {
                           <div>休憩: {shift.break_minutes}分</div>
                           {shift.notes && <div className="mt-1 text-gray-500">{shift.notes}</div>}
                         </div>
+                        {isAdmin && (
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                            <button
+                              onClick={(e) => handleEditClick(shift, e)}
+                              className="p-1.5 hover:bg-blue-100 rounded bg-white shadow-md"
+                              title="編集"
+                            >
+                              <Edit2 className="h-4 w-4 text-blue-600" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteClick(shift, e)}
+                              className="p-1.5 hover:bg-red-100 rounded bg-white shadow-md"
+                              title="削除"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -294,6 +416,134 @@ const ShiftCalendar = () => {
           {viewMode === 'month' && renderMonthView()}
           {viewMode === 'week' && renderWeekView()}
           {viewMode === 'day' && renderDayView()}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingShift && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">シフト編集</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  スタッフ
+                </label>
+                <input
+                  type="text"
+                  value={editingShift.user_name}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  日付
+                </label>
+                <input
+                  type="text"
+                  value={editingShift.shift_date}
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    開始時間
+                  </label>
+                  <input
+                    type="time"
+                    name="startTime"
+                    defaultValue={editingShift.start_time}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    終了時間
+                  </label>
+                  <input
+                    type="time"
+                    name="endTime"
+                    defaultValue={editingShift.end_time}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  休憩時間（分）
+                </label>
+                <input
+                  type="number"
+                  name="breakMinutes"
+                  defaultValue={editingShift.break_minutes}
+                  min="0"
+                  step="15"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  ポジション
+                </label>
+                <select
+                  name="positionId"
+                  defaultValue={editingShift.position_id}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  {positions.map(pos => (
+                    <option key={pos.id} value={pos.id}>{pos.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  メモ
+                </label>
+                <textarea
+                  name="notes"
+                  defaultValue={editingShift.notes}
+                  rows="2"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateMutation.isPending}
+                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {updateMutation.isPending ? '保存中...' : '保存'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

@@ -180,62 +180,97 @@ export const deleteShift = (req, res) => {
   }
 };
 
-// AI Shift Generation
+// AI Shift Generation with Shift Requests Integration
 function generateOptimalShifts(storeId, staff, requests, startDate, endDate, positions) {
   const shifts = [];
   const currentDate = new Date(startDate);
   const end = new Date(endDate);
   
-  // Group staff by their availability
+  // Index requests by date and user for quick lookup
+  const requestsByDate = {};
+  requests.forEach(req => {
+    if (!requestsByDate[req.request_date]) {
+      requestsByDate[req.request_date] = [];
+    }
+    requestsByDate[req.request_date].push(req);
+  });
+  
+  // Filter available staff
   const availableStaff = staff.filter(s => s.role === 'staff' || s.role === 'manager');
   
   while (currentDate <= end) {
     const dateStr = format(currentDate, 'yyyy-MM-dd');
     const dayOfWeek = currentDate.getDay();
+    const dayRequests = requestsByDate[dateStr] || [];
     
-    // Skip if Sunday (0) - adjust based on business needs
-    if (dayOfWeek === 0) {
-      currentDate.setDate(currentDate.getDate() + 1);
-      continue;
-    }
+    // Get staff who requested to work this day
+    const requestedStaff = dayRequests.filter(r => 
+      r.availability === 'available' && (r.status === 'submitted' || r.status === 'approved')
+    );
+    
+    // Get staff who are unavailable
+    const unavailableUserIds = dayRequests
+      .filter(r => r.availability === 'unavailable')
+      .map(r => r.user_id);
+    
+    // Filter staff based on availability
+    const dayAvailableStaff = availableStaff.filter(s => !unavailableUserIds.includes(s.id));
     
     // Determine shifts needed based on day
     const isWeekend = dayOfWeek === 6 || dayOfWeek === 0;
-    const shiftsPerDay = isWeekend ? 6 : 4;
+    const shiftsNeeded = isWeekend ? 6 : 4;
     
-    // Morning shift (09:00-14:00)
-    const morningStaff = availableStaff.slice(0, Math.ceil(shiftsPerDay / 2));
-    morningStaff.forEach((person, idx) => {
-      const position = positions[idx % positions.length];
+    // Priority 1: Create shifts for staff who explicitly requested this date
+    requestedStaff.forEach(request => {
+      const staffMember = availableStaff.find(s => s.id === request.user_id);
+      if (!staffMember) return;
+      
+      const startTime = request.preferred_start_time || (shifts.filter(s => s.shiftDate === dateStr).length < shiftsNeeded / 2 ? '09:00' : '17:00');
+      const endTime = request.preferred_end_time || (startTime === '09:00' ? '14:00' : '22:00');
+      const positionId = request.preferred_position_id || positions[0]?.id;
+      
       shifts.push({
         id: randomUUID(),
         storeId,
-        userId: person.id,
-        positionId: position.id,
+        userId: request.user_id,
+        positionId,
         shiftDate: dateStr,
-        startTime: '09:00',
-        endTime: '14:00',
-        breakMinutes: 0,
-        status: 'draft'
+        startTime,
+        endTime,
+        breakMinutes: startTime === '09:00' ? 0 : 60,
+        status: 'draft',
+        notes: 'スタッフ希望に基づく'
       });
     });
     
-    // Evening shift (17:00-22:00)
-    const eveningStaff = availableStaff.slice(Math.ceil(shiftsPerDay / 2), shiftsPerDay);
-    eveningStaff.forEach((person, idx) => {
-      const position = positions[idx % positions.length];
-      shifts.push({
-        id: randomUUID(),
-        storeId,
-        userId: person.id,
-        positionId: position.id,
-        shiftDate: dateStr,
-        startTime: '17:00',
-        endTime: '22:00',
-        breakMinutes: 60,
-        status: 'draft'
-      });
-    });
+    // Priority 2: Fill remaining slots with available staff
+    const assignedCount = shifts.filter(s => s.shiftDate === dateStr).length;
+    const remainingSlots = shiftsNeeded - assignedCount;
+    
+    if (remainingSlots > 0) {
+      // Get staff not yet assigned today
+      const assignedUserIds = shifts.filter(s => s.shiftDate === dateStr).map(s => s.userId);
+      const unassignedStaff = dayAvailableStaff.filter(s => !assignedUserIds.includes(s.id));
+      
+      // Distribute remaining slots
+      for (let i = 0; i < Math.min(remainingSlots, unassignedStaff.length); i++) {
+        const staffMember = unassignedStaff[i];
+        const position = positions[i % positions.length];
+        const isMorningShift = i < remainingSlots / 2;
+        
+        shifts.push({
+          id: randomUUID(),
+          storeId,
+          userId: staffMember.id,
+          positionId: position.id,
+          shiftDate: dateStr,
+          startTime: isMorningShift ? '09:00' : '17:00',
+          endTime: isMorningShift ? '14:00' : '22:00',
+          breakMinutes: isMorningShift ? 0 : 60,
+          status: 'draft'
+        });
+      }
+    }
     
     currentDate.setDate(currentDate.getDate() + 1);
   }
@@ -262,8 +297,13 @@ export const generateShifts = (req, res) => {
       return res.status(400).json({ error: 'No positions found for this store' });
     }
     
-    // Get shift requests
-    const requests = db.prepare('SELECT * FROM shift_requests WHERE request_date BETWEEN ? AND ?').all(startDate, endDate);
+    // Get shift requests (submitted or approved only)
+    const requests = db.prepare(`
+      SELECT * FROM shift_requests 
+      WHERE store_id = ? 
+      AND request_date BETWEEN ? AND ? 
+      AND status IN ('submitted', 'approved')
+    `).all(storeId, startDate, endDate);
     
     // Generate optimal shifts
     const generatedShifts = generateOptimalShifts(storeId, staff, requests, startDate, endDate, positions);

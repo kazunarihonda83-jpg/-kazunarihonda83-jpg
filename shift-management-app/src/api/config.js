@@ -97,4 +97,17 @@ export const positionAPI = {
   deletePosition: (id) => api.delete(`/positions/\${id}`),
 };
 
+// Shift Request API
+export const shiftRequestAPI = {
+  getShiftRequests: (params) => api.get('/shift-requests', { params }),
+  getShiftRequestById: (id) => api.get(`/shift-requests/${id}`),
+  createShiftRequest: (data) => api.post('/shift-requests', data),
+  createBulkShiftRequests: (data) => api.post('/shift-requests/bulk', data),
+  updateShiftRequest: (id, data) => api.put(`/shift-requests/${id}`, data),
+  submitShiftRequests: (data) => api.post('/shift-requests/submit', data),
+  approveShiftRequests: (data) => api.post('/shift-requests/approve', data),
+  deleteShiftRequest: (id) => api.delete(`/shift-requests/${id}`),
+  getSubmissionStatus: (params) => api.get('/shift-requests/status', { params }),
+};
+
 export default api;

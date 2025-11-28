@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import shiftRoutes from './routes/shifts.js';
+import shiftRequestRoutes from './routes/shiftRequests.js';
 import attendanceRoutes from './routes/attendance.js';
 import evaluationRoutes from './routes/evaluations.js';
 import positionRoutes from './routes/positions.js';
@@ -25,6 +26,7 @@ app.get('/', (req, res) => {
       health: '/health',
       auth: '/api/auth/*',
       shifts: '/api/shifts/*',
+      shiftRequests: '/api/shift-requests/*',
       attendance: '/api/attendance/*',
       evaluations: '/api/evaluations/*',
       positions: '/api/positions/*'
@@ -40,6 +42,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/shifts', shiftRoutes);
+app.use('/api/shift-requests', shiftRequestRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/evaluations', evaluationRoutes);
 app.use('/api/positions', positionRoutes);
@@ -69,12 +72,12 @@ app.listen(PORT, '0.0.0.0', () => {
 ║  • POST /api/shifts                        ║
 ║  • POST /api/shifts/generate               ║
 ║  • POST /api/shifts/publish                ║
-║  • GET  /api/shifts/simulate/labor-cost    ║
+║  • GET  /api/shift-requests                ║
+║  • POST /api/shift-requests/bulk           ║
+║  • POST /api/shift-requests/submit         ║
 ║  • POST /api/attendance/clock-in           ║
 ║  • POST /api/attendance/clock-out          ║
-║  • GET  /api/attendance/all                ║
 ║  • GET  /api/evaluations                   ║
-║  • POST /api/evaluations                   ║
 ║  • GET  /api/positions                     ║
 ╚════════════════════════════════════════════╝
   `);

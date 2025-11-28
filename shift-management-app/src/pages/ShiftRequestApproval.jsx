@@ -34,7 +34,8 @@ const ShiftRequestApproval = () => {
         storeId
       });
       return data;
-    }
+    },
+    refetchInterval: 10000 // Auto-refresh every 10 seconds
   });
 
   // Approve mutation
@@ -45,9 +46,13 @@ const ShiftRequestApproval = () => {
         approvedBy: user.id
       });
     },
-    onSuccess: () => {
-      toast.success('シフト希望を承認しました');
+    onSuccess: (data, requestIds) => {
+      toast.success('シフト希望を承認しました。スタッフ画面にも反映されます。', {
+        duration: 4000
+      });
+      // Invalidate all shift request queries to update all screens
       queryClient.invalidateQueries(['shiftRequests']);
+      queryClient.invalidateQueries(['shiftRequestStatus']);
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'シフト希望の承認に失敗しました');
@@ -106,7 +111,8 @@ const ShiftRequestApproval = () => {
       return;
     }
 
-    if (window.confirm(`${userRequests[0].user_name}さんのシフト希望を承認しますか？`)) {
+    const userName = userRequests[0].user_name;
+    if (window.confirm(`${userName}さんのシフト希望を承認しますか？\n\n承認後、${userName}さんの画面にも自動的に反映されます。`)) {
       approveMutation.mutate(userRequests.map(r => r.id));
     }
   };

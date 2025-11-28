@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { ja } from 'date-fns/locale';
@@ -21,6 +21,7 @@ const ShiftRequest = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [unavailableDates, setUnavailableDates] = useState(new Set());
   const [dateDetails, setDateDetails] = useState({});
+  const previousApprovedCount = useRef(0);
   
   const monthStr = format(currentMonth, 'yyyy-MM');
   const storeId = 'store-main';
@@ -36,7 +37,8 @@ const ShiftRequest = () => {
       });
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    refetchInterval: 5000 // Auto-refresh every 5 seconds to detect admin approval
   });
 
   // Get submission status
@@ -50,7 +52,8 @@ const ShiftRequest = () => {
       });
       return data;
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    refetchInterval: 5000 // Auto-refresh every 5 seconds to detect admin approval
   });
 
   // Initialize from existing requests
@@ -173,6 +176,17 @@ const ShiftRequest = () => {
 
   const isSubmitted = submissionStatus?.is_submitted || false;
   const isApproved = submissionStatus?.approved_count > 0;
+
+  // Detect when approval happens and show notification
+  useEffect(() => {
+    if (submissionStatus?.approved_count > 0 && previousApprovedCount.current === 0) {
+      toast.success('🎉 シフト希望が承認されました！', {
+        duration: 5000,
+        description: '管理者があなたのシフト希望を承認しました。'
+      });
+    }
+    previousApprovedCount.current = submissionStatus?.approved_count || 0;
+  }, [submissionStatus?.approved_count]);
 
   return (
     <div className="space-y-6">
@@ -367,11 +381,20 @@ const ShiftRequest = () => {
           </div>
         )}
 
-        {isSubmitted && (
+        {isSubmitted && !isApproved && (
+          <div className="mt-6 text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <Clock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+            <p className="text-blue-800 font-medium">シフト希望は提出済みです</p>
+            <p className="text-sm text-blue-700 mt-1">管理者の承認をお待ちください</p>
+            <p className="text-xs text-blue-600 mt-2">※ 承認されると自動的に表示が更新されます</p>
+          </div>
+        )}
+        
+        {isApproved && (
           <div className="mt-6 text-center p-4 bg-green-50 border border-green-200 rounded-lg">
             <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <p className="text-green-800 font-medium">シフト希望は提出済みです</p>
-            <p className="text-sm text-green-700 mt-1">管理者の承認をお待ちください</p>
+            <p className="text-green-800 font-medium">シフト希望が承認されました！</p>
+            <p className="text-sm text-green-700 mt-1">管理者がシフトを作成する際に、あなたの希望が反映されます</p>
           </div>
         )}
       </div>

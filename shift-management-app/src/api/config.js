@@ -47,6 +47,9 @@ export const authAPI = {
   getCurrentUser: () => api.get('/auth/me'),
   changePassword: (currentPassword, newPassword) => 
     api.post('/auth/change-password', { currentPassword, newPassword }),
+  getAllUsers: () => api.get('/auth/users'),
+  updateUser: (id, data) => api.put(`/auth/users/${id}`, data),
+  deleteUser: (id) => api.delete(`/auth/users/${id}`),
 };
 
 // Shift API

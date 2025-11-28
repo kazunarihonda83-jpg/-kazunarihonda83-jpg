@@ -4,7 +4,7 @@ import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays } from 'dat
 import { ChevronLeft, ChevronRight, Plus, Sparkles, Send, Trash2, Edit, X } from 'lucide-react';
 import { toast } from 'sonner';
 import useAuthStore from '../store/useAuthStore';
-import { shiftAPI, positionAPI } from '../api/config';
+import { shiftAPI, positionAPI, authAPI } from '../api/config';
 
 const ShiftManagement = () => {
   const { user, isManager } = useAuthStore();
@@ -42,13 +42,11 @@ const ShiftManagement = () => {
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      return [
-        { id: 'user-admin', name: '管理者 ユーザー' },
-        { id: 'user-manager', name: 'マネージャー 田中' },
-        { id: 'user-staff1', name: 'スタッフ 佐藤' },
-        { id: 'user-staff2', name: '花子 鈴木' },
-        { id: 'user-staff3', name: '次郎 山田' }
-      ];
+      const response = await authAPI.getAllUsers();
+      return response.data.map(user => ({
+        id: user.id,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
+      }));
     }
   });
 

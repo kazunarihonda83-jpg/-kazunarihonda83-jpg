@@ -40,41 +40,12 @@ const StaffList = () => {
   const { data: staffList, isLoading } = useQuery({
     queryKey: ['staffList'],
     queryFn: async () => {
-      // Since we don't have a dedicated staff API endpoint, we'll use a placeholder
-      // In a real application, you would have an API endpoint like: /api/users
-      // For now, returning mock data
-      return [
-        {
-          id: 1,
-          name: '管理者ユーザー',
-          email: 'admin@test.com',
-          role: 'admin',
-          hourly_wage: 2000,
-          phone: '090-1234-5678',
-          hire_date: '2023-01-01',
-          is_active: true,
-        },
-        {
-          id: 2,
-          name: 'マネージャー',
-          email: 'manager@test.com',
-          role: 'manager',
-          hourly_wage: 1500,
-          phone: '090-2345-6789',
-          hire_date: '2023-02-01',
-          is_active: true,
-        },
-        {
-          id: 3,
-          name: 'スタッフA',
-          email: 'staff@test.com',
-          role: 'staff',
-          hourly_wage: 1000,
-          phone: '090-3456-7890',
-          hire_date: '2023-03-01',
-          is_active: true,
-        },
-      ];
+      const response = await authAPI.getAllUsers();
+      // Transform data to include full name
+      return response.data.map(user => ({
+        ...user,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+      }));
     },
   });
 
@@ -95,30 +66,36 @@ const StaffList = () => {
     },
   });
 
-  // Update staff mutation (placeholder)
+  // Update staff mutation
   const updateStaffMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      // Placeholder for update API
-      toast.success('スタッフ情報を更新しました');
-      return { id, ...data };
+      const response = await authAPI.updateUser(id, data);
+      return response.data;
     },
     onSuccess: () => {
+      toast.success('スタッフ情報を更新しました');
       queryClient.invalidateQueries(['staffList']);
       setShowEditModal(false);
       setSelectedStaff(null);
       resetForm();
     },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'スタッフ情報の更新に失敗しました');
+    },
   });
 
-  // Delete staff mutation (placeholder)
+  // Delete staff mutation
   const deleteStaffMutation = useMutation({
     mutationFn: async (id) => {
-      // Placeholder for delete API
-      toast.success('スタッフを削除しました');
-      return id;
+      const response = await authAPI.deleteUser(id);
+      return response.data;
     },
     onSuccess: () => {
+      toast.success('スタッフを削除しました');
       queryClient.invalidateQueries(['staffList']);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'スタッフの削除に失敗しました');
     },
   });
 
@@ -140,7 +117,16 @@ const StaffList = () => {
       return;
     }
 
-    createStaffMutation.mutate(staffForm);
+    // Split name into firstName and lastName
+    const [firstName, ...lastNameParts] = staffForm.name.split(' ');
+    const lastName = lastNameParts.join(' ') || firstName;
+
+    createStaffMutation.mutate({
+      ...staffForm,
+      firstName,
+      lastName,
+      hourlyWage: Number(staffForm.hourly_wage),
+    });
   };
 
   const handleEditStaff = () => {
@@ -149,9 +135,18 @@ const StaffList = () => {
       return;
     }
 
+    // Split name into firstName and lastName
+    const [firstName, ...lastNameParts] = staffForm.name.split(' ');
+    const lastName = lastNameParts.join(' ') || firstName;
+
     updateStaffMutation.mutate({
       id: selectedStaff.id,
-      data: staffForm,
+      data: {
+        ...staffForm,
+        firstName,
+        lastName,
+        hourlyWage: Number(staffForm.hourly_wage),
+      },
     });
   };
 
@@ -169,7 +164,7 @@ const StaffList = () => {
   const openEditModal = (staff) => {
     setSelectedStaff(staff);
     setStaffForm({
-      name: staff.name,
+      name: staff.name || `${staff.first_name || ''} ${staff.last_name || ''}`.trim(),
       email: staff.email,
       password: '',
       role: staff.role,

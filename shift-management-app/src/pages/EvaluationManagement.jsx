@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { Star, Send, Target, TrendingUp, X, Edit, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import useAuthStore from '../store/useAuthStore';
-import { evaluationAPI } from '../api/config';
+import { evaluationAPI, authAPI } from '../api/config';
 
 const EvaluationManagement = () => {
   const { user, isManager } = useAuthStore();
@@ -47,11 +47,17 @@ const EvaluationManagement = () => {
     targetDate: ''
   });
 
-  const [users] = useState([
-    { id: 'user-staff1', name: 'スタッフ 佐藤' },
-    { id: 'user-staff2', name: '花子 鈴木' },
-    { id: 'user-staff3', name: '次郎 山田' }
-  ]);
+  // Fetch users for evaluation
+  const { data: users = [] } = useQuery({
+    queryKey: ['users-for-evaluation'],
+    queryFn: async () => {
+      const response = await authAPI.getAllUsers();
+      return response.data.map(user => ({
+        id: user.id,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
+      }));
+    }
+  });
 
   // Fetch evaluations
   const { data: evaluations = [], refetch: refetchEvaluations } = useQuery({

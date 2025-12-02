@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>業務改善助成金Q&A</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1a56db;
+        }
+
+        .stats-inline {
+            display: flex;
+            gap: 30px;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
+        .stat-inline span {
+            font-weight: 600;
+            color: #1a56db;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            height: fit-content;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+        }
+
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+
+        .sidebar-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .sidebar h2 {
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-item {
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            border: 1px solid transparent;
+        }
+
+        .category-item:hover {
+            background: #eff6ff;
+            border-color: #1a56db;
+            color: #1a56db;
+        }
+
+        .category-count {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .category-item:hover .category-count {
+            background: #1a56db;
+            color: white;
+        }
+
+        .quick-questions {
+            list-style: none;
+        }
+
+        .quick-question {
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: #f9fafb;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            color: #374151;
+        }
+
+        .quick-question:hover {
+            background: #eff6ff;
+            color: #1a56db;
+        }
+
+        .main-area {
+            background: white;
+            border-radius: 8px;
+            padding: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            max-height: 800px;
+        }
+
+        .search-area {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1a56db;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+        }
+
+        .search-button {
+            padding: 12px 24px;
+            background: #1a56db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .search-button:hover {
+            background: #1e40af;
+        }
+
+        .clear-button {
+            padding: 12px 20px;
+            background: white;
+            color: #6b7280;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-button:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #fafbfc;
+        }
+
+        .message-group {
+            margin-bottom: 25px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            background: #1a56db;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: inline-block;
+            max-width: 70%;
+            float: right;
+            clear: both;
+            font-size: 0.95em;
+        }
+
+        .bot-message {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            clear: both;
+        }
+
+        .result-item {
+            background: #fafbfc;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border-left: 3px solid #1a56db;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .result-category {
+            display: inline-block;
+            background: #eff6ff;
+            color: #1a56db;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .score-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+        }
+
+        .action-btn:hover {
+            background: #f9fafb;
+            border-color: #1a56db;
+            color: #1a56db;
+        }
+
+        .action-btn.favorited {
+            background: #fef3c7;
+            border-color: #fbbf24;
+            color: #b45309;
+        }
+
+        .result-question {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .result-answer {
+            color: #4b5563;
+            line-height: 1.7;
+            font-size: 0.9em;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .welcome-message h2 {
+            color: #1a56db;
+            margin-bottom: 12px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        .welcome-message p {
+            font-size: 0.95em;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #1a56db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            background: #f9fafb;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: #eff6ff;
+            color: #1a56db;
+        }
+
+        .history-remove {
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .history-remove:hover {
+            color: #ef4444;
+        }
+
+        .favorite-list {
+            list-style: none;
+        }
+
+        .favorite-item {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #fffbeb;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .favorite-item:hover {
+            background: #fef3c7;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #9ca3af;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                order: 2;
+            }
+
+            .stats-inline {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">業務改善助成金Q&A</div>
+            <div class="stats-inline">
+                <div class="stat-inline">
+                    カテゴリー: <span id="totalCategories">-</span>
+                </div>
+                <div class="stat-inline">
+                    Q&A数: <span id="totalQuestions">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="sidebar-section">
+                    <h2>よくある質問</h2>
+                    <ul class="quick-questions" id="quickQuestions">
+                        <li class="quick-question" data-question="どのような中小企業事業者が助成の対象となりますか">中小企業の対象要件</li>
+                        <li class="quick-question" data-question="労働保険に未加入でも助成の対象となりますか">労働保険の加入要件</li>
+                        <li class="quick-question" data-question="事業場内最賃はどのように算定するのですか">事業場内最賃の算定方法</li>
+                        <li class="quick-question" data-question="どのような設備投資が助成の対象となりますか">助成対象の設備投資</li>
+                        <li class="quick-question" data-question="リース料金、保守料金は助成対象となりますか">リース料金の取扱い</li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <h2>カテゴリー</h2>
+                    <ul class="category-list" id="categoryList">
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <h2>検索履歴</h2>
+                    <ul class="history-list" id="historyList">
+                        <div class="no-data">履歴なし</div>
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <h2>お気に入り</h2>
+                    <ul class="favorite-list" id="favoriteList">
+                        <div class="no-data">お気に入りなし</div>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="main-area">
+                <div class="search-area">
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            id="searchInput" 
+                            placeholder="質問を入力してください（例：どのような中小企業が対象となりますか？）"
+                        >
+                        <button class="search-button" id="searchButton">検索</button>
+                        <button class="clear-button" id="clearButton">クリア</button>
+                    </div>
+                </div>
+
+                <div class="messages-area" id="messages">
+                    <div class="welcome-message">
+                        <h2>業務改善助成金Q&A</h2>
+                        <p>業務改善助成金に関するご質問にお答えします</p>
+                        <p>検索ボックスに質問を入力するか、左のメニューからお選びください</p>
+                    </div>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="color: #6b7280;">検索中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const clearButton = document.getElementById('clearButton');
+        const messages = document.getElementById('messages');
+        const loading = document.getElementById('loading');
+        const categoryList = document.getElementById('categoryList');
+        const historyList = document.getElementById('historyList');
+        const favoriteList = document.getElementById('favoriteList');
+        const quickQuestions = document.getElementById('quickQuestions');
+
+        // LocalStorageキー
+        const HISTORY_KEY = 'qa_search_history';
+        const FAVORITES_KEY = 'qa_favorites';
+
+        // 履歴管理
+        function addToHistory(query) {
+            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            history = history.filter(item => item !== query);
+            history.unshift(query);
+            history = history.slice(0, 5);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            if (history.length === 0) {
+                historyList.innerHTML = '<div class="no-data">履歴なし</div>';
+                return;
+            }
+            
+            historyList.innerHTML = history.map(item => `
+                <li class="history-item" onclick="searchFromHistory('${item.replace(/'/g, "\\'")}')">
+                    <span>${item}</span>
+                    <span class="history-remove" onclick="event.stopPropagation(); removeFromHistory('${item.replace(/'/g, "\\'")}')">×</span>
+                </li>
+            `).join('');
+        }
+
+        function removeFromHistory(query) {
+            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            history = history.filter(item => item !== query);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            renderHistory();
+        }
+
+        function searchFromHistory(query) {
+            searchInput.value = query;
+            search();
+        }
+
+        // お気に入り管理
+        function toggleFavorite(id, question) {
+            let favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+            const index = favorites.findIndex(f => f.id === id);
+            
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push({ id, question });
+            }
+            
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+            renderFavorites();
+            
+            // ボタンの状態を更新
+            const btn = document.querySelector(`[data-fav-id="${id}"]`);
+            if (btn) {
+                btn.classList.toggle('favorited');
+                btn.textContent = btn.classList.contains('favorited') ? '★' : '☆';
+            }
+        }
+
+        function renderFavorites() {
+            const favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+            if (favorites.length === 0) {
+                favoriteList.innerHTML = '<div class="no-data">お気に入りなし</div>';
+                return;
+            }
+            
+            favoriteList.innerHTML = favorites.map(item => `
+                <li class="favorite-item" onclick="searchFromHistory('${item.question.replace(/'/g, "\\'")}')">
+                    ${item.question.substring(0, 30)}${item.question.length > 30 ? '...' : ''}
+                </li>
+            `).join('');
+        }
+
+        function isFavorited(id) {
+            const favorites = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+            return favorites.some(f => f.id === id);
+        }
+
+        // 統計情報を読み込む
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const data = await response.json();
+                document.getElementById('totalCategories').textContent = data.total_categories;
+                document.getElementById('totalQuestions').textContent = data.total_questions;
+            } catch (error) {
+                console.error('統計情報の読み込みに失敗しました:', error);
+            }
+        }
+
+        // カテゴリー一覧を読み込む
+        async function loadCategories() {
+            try {
+                const response = await fetch(`${API_BASE}/api/categories`);
+                const data = await response.json();
+                
+                categoryList.innerHTML = '';
+                data.categories.forEach(category => {
+                    const li = document.createElement('li');
+                    li.className = 'category-item';
+                    li.innerHTML = `
+                        <span>${category.name}</span>
+                        <span class="category-count">${category.count}</span>
+                    `;
+                    li.onclick = () => loadCategoryDetail(category.id, category.name);
+                    categoryList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('カテゴリーの読み込みに失敗しました:', error);
+            }
+        }
+
+        // カテゴリー詳細を読み込む
+        async function loadCategoryDetail(categoryId, categoryName) {
+            try {
+                messages.innerHTML = `
+                    <div class="message-group">
+                        <div class="user-message">
+                            「${categoryName}」のQ&Aを表示
+                        </div>
+                    </div>
+                `;
+                
+                loading.classList.add('show');
+                
+                const response = await fetch(`${API_BASE}/api/category/${categoryId}`);
+                const data = await response.json();
+                
+                loading.classList.remove('show');
+                
+                let resultsHtml = '<div class="message-group"><div class="bot-message">';
+                resultsHtml += `<h3 style="margin-bottom: 16px; color: #111827; font-size: 1.1em;">${data.name}</h3>`;
+                
+                data.qas.forEach(qa => {
+                    const favorited = isFavorited(qa.id);
+                    resultsHtml += `
+                        <div class="result-item">
+                            <div class="result-header">
+                                <div class="result-actions">
+                                    <button class="action-btn ${favorited ? 'favorited' : ''}" data-fav-id="${qa.id}" onclick="toggleFavorite('${qa.id}', '${qa.question.replace(/'/g, "\\'")}')">
+                                        ${favorited ? '★' : '☆'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="result-question">${qa.question}</div>
+                            <div class="result-answer">${qa.answer}</div>
+                        </div>
+                    `;
+                });
+                
+                resultsHtml += '</div></div>';
+                messages.innerHTML += resultsHtml;
+                messages.scrollTop = messages.scrollHeight;
+            } catch (error) {
+                loading.classList.remove('show');
+                console.error('カテゴリー詳細の読み込みに失敗しました:', error);
+            }
+        }
+
+        // 検索を実行
+        async function search() {
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                alert('質問を入力してください');
+                return;
+            }
+
+            addToHistory(query);
+
+            messages.innerHTML = `
+                <div class="message-group">
+                    <div class="user-message">
+                        ${query}
+                    </div>
+                </div>
+            `;
+
+            loading.classList.add('show');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+                loading.classList.remove('show');
+
+                if (data.results && data.results.length > 0) {
+                    let resultsHtml = '<div class="message-group"><div class="bot-message">';
+                    resultsHtml += `<p style="margin-bottom: 16px; font-weight: 500;"><strong>${data.results.length}件の関連するQ&Aが見つかりました</strong></p>`;
+                    
+                    data.results.forEach((result, index) => {
+                        const scorePercent = Math.round(result.score * 100);
+                        const favorited = isFavorited(result.id);
+                        resultsHtml += `
+                            <div class="result-item">
+                                <div class="result-header">
+                                    <span class="result-category">${result.category}</span>
+                                    <span class="score-badge">関連度: ${scorePercent}%</span>
+                                    <div class="result-actions" style="margin-left: auto;">
+                                        <button class="action-btn ${favorited ? 'favorited' : ''}" data-fav-id="${result.id}" onclick="toggleFavorite('${result.id}', '${result.question.replace(/'/g, "\\'")}')">
+                                            ${favorited ? '★' : '☆'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="result-question">${result.question}</div>
+                                <div class="result-answer">${result.answer}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    resultsHtml += '</div></div>';
+                    messages.innerHTML += resultsHtml;
+                } else {
+                    messages.innerHTML += `
+                        <div class="message-group">
+                            <div class="bot-message" style="text-align: center; color: #6b7280;">
+                                <p>申し訳ございません。該当するQ&Aが見つかりませんでした。</p>
+                                <p>別の言葉で質問してみるか、左のカテゴリーから探してみてください。</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                messages.scrollTop = messages.scrollHeight;
+            } catch (error) {
+                loading.classList.remove('show');
+                console.error('検索エラー:', error);
+                messages.innerHTML += `
+                    <div class="message-group">
+                        <div class="bot-message">
+                            <p>エラーが発生しました。もう一度お試しください。</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            searchInput.value = '';
+        }
+
+        // クリアボタン
+        clearButton.addEventListener('click', () => {
+            messages.innerHTML = `
+                <div class="welcome-message">
+                    <h2>業務改善助成金Q&A</h2>
+                    <p>業務改善助成金に関するご質問にお答えします</p>
+                    <p>検索ボックスに質問を入力するか、左のメニューからお選びください</p>
+                </div>
+            `;
+        });
+
+        // よくある質問クリック
+        quickQuestions.querySelectorAll('.quick-question').forEach(item => {
+            item.addEventListener('click', function() {
+                searchInput.value = this.dataset.question;
+                search();
+            });
+        });
+
+        // イベントリスナー
+        searchButton.addEventListener('click', search);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                search();
+            }
+        });
+
+        // 初期化
+        loadStats();
+        loadCategories();
+        renderHistory();
+        renderFavorites();
+    </script>
+</body>
+</html>

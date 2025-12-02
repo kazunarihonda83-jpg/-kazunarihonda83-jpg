@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 248, 250, 252;
+  --background-end-rgb: 241, 245, 249;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* 管理者向けスタイル */
+.admin-card {
+  @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200;
+}
+
+.admin-sidebar {
+  @apply bg-gray-900 text-white;
+}
+
+.admin-sidebar-item {
+  @apply flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors cursor-pointer rounded-lg;
+}
+
+.admin-sidebar-item.active {
+  @apply bg-primary-600 hover:bg-primary-700;
+}
+
+.stat-card {
+  @apply bg-white rounded-xl shadow-md p-6 border-l-4;
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium;
+}
+
+.btn-danger {
+  @apply px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium;
+}
+
+.input-field {
+  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500;
+}
+
+.table-row {
+  @apply border-b border-gray-200 hover:bg-gray-50 transition-colors;
+}

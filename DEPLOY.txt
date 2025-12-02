@@ -1,0 +1,29 @@
+=================================================
+  🚀 3分でデプロイ - コピペするだけ
+=================================================
+
+1. https://vercel.com/new を開く
+
+2. GitHubでログイン
+
+3. リポジトリ選択:
+   kazunarihonda83-jpg/-kazunarihonda83-jpg
+
+4. 以下をコピペ:
+
+   Root Directory: ./
+   
+   Build Command: npm run build
+   
+   Output Directory: shift-management-app/dist
+   
+   Install Command: npm run install
+   
+   Environment Variables:
+   VITE_API_URL=https://3000-iqf0dj1wke1cog78fnr4y-cc2fbc16.sandbox.novita.ai
+
+5. 「Deploy」ボタンをクリック
+
+=================================================
+完了！
+=================================================

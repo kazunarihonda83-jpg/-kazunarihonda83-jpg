@@ -1,0 +1,11 @@
+node_modules
+.git
+.DS_Store
+*.log
+business-plan-generator
+restaurant-admin-panel
+restaurant-menu-viewer
+restaurant-translate
+subsidy-chatbot
+*.md
+shared-data-server.js

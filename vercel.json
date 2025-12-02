@@ -1,9 +1,7 @@
 {
-  "version": 2,
-  "buildCommand": "cd shift-management-app && npm install && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "shift-management-app/dist",
-  "installCommand": "cd shift-management-app && npm install",
-  "framework": "vite",
+  "installCommand": "npm run install",
   "rewrites": [
     {
       "source": "/(.*)",

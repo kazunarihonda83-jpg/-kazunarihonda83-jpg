@@ -9,7 +9,8 @@
     "client": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "db:seed": "node server/db/sqlite.js"
+    "db:seed": "node server/db/sqlite.js",
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.17.19",

@@ -1,0 +1,15 @@
+services:
+  # Backend API Service
+  - type: web
+    name: shift-management-api
+    env: node
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    healthCheckPath: /health
+    autoDeploy: true

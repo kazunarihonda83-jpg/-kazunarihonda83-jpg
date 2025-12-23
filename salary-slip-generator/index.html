@@ -1544,6 +1544,9 @@
 
         // 認証チェック
         async function checkAuth() {
+            showGuestInfo();
+            return;
+            // 以下サーバー機能は無効化
             if (authToken) {
                 try {
                     const response = await fetch(`${API_BASE}/api/verify`, {

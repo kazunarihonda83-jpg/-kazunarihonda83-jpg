@@ -888,32 +888,217 @@
             `;
         }
 
-        // フォーマット6以降も同様に完全に異なる構造で実装...
-        // 紙面の都合上、残りのフォーマットは省略形で実装
+        // フォーマット6: 3×2グリッド（各月独立ボックス）
         function generateFormat6(theme) {
-            // ブロック配置型
-            return generateFormat1(theme); // 実装例として使用
+            return `
+                <style>
+                    .f6-title { text-align: center; font-size: 22pt; font-weight: bold; margin-bottom: 5mm; border: 4px double ${theme.primary}; padding: 3mm; }
+                    .f6-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; }
+                    .f6-box { border: 3px solid ${theme.primary}; padding: 3mm; background: ${theme.bg}; }
+                    .f6-header { background: ${theme.primary}; color: white; padding: 2mm; margin: -3mm -3mm 2mm -3mm; font-size: 11pt; font-weight: bold; text-align: center; }
+                    .f6-row { display: grid; grid-template-columns: 1fr 2fr; gap: 2mm; padding: 1mm 0; border-bottom: 1px solid #ddd; font-size: 8pt; }
+                    .f6-label { font-weight: bold; }
+                </style>
+                <div class="f6-title">6ヶ月給与明細</div>
+                <div class="f6-grid">
+                    ${monthData.map((d, i) => `
+                        <div class="f6-box">
+                            <div class="f6-header">${d.issueDate || (i+1)+'月分'} ${d.employeeName || ''}</div>
+                            <div class="f6-row"><div class="f6-label">出勤日数</div><div>${d.workDays || '-'}日</div></div>
+                            <div class="f6-row"><div class="f6-label">基本給</div><div>${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</div></div>
+                            <div class="f6-row"><div class="f6-label">通勤費</div><div>${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</div></div>
+                            <div class="f6-row" style="background: ${theme.header}"><div class="f6-label">支給計</div><div style="font-weight: bold">${calcTotal(d, 'payment') > 0 ? formatNumber(calcTotal(d, 'payment')) : '-'}</div></div>
+                            <div class="f6-row"><div class="f6-label">所得税</div><div>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</div></div>
+                            <div class="f6-row"><div class="f6-label">住民税</div><div>${d.residentTax ? formatNumber(d.residentTax) : '-'}</div></div>
+                            <div class="f6-row"><div class="f6-label">健康保険</div><div>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</div></div>
+                            <div class="f6-row"><div class="f6-label">厚生年金</div><div>${d.pension ? formatNumber(d.pension) : '-'}</div></div>
+                            <div class="f6-row"><div class="f6-label">雇用保険</div><div>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</div></div>
+                            <div class="f6-row" style="background: ${theme.total}; font-size: 9pt;"><div class="f6-label">差引支給額</div><div style="font-weight: bold; color: ${theme.primary}">${calcTotal(d, 'payment') - calcTotal(d, 'deduction') > 0 ? formatNumber(calcTotal(d, 'payment') - calcTotal(d, 'deduction')) : '-'}</div></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
-        function generateFormat7(theme) { return generateFormat2(theme); }
-        function generateFormat8(theme) { return generateFormat3(theme); }
-        function generateFormat9(theme) { return generateFormat4(theme); }
-        function generateFormat10(theme) { return generateFormat5(theme); }
-        function generateFormat11(theme) { return generateFormat1(theme); }
-        function generateFormat12(theme) { return generateFormat2(theme); }
-        function generateFormat13(theme) { return generateFormat3(theme); }
-        function generateFormat14(theme) { return generateFormat4(theme); }
-        function generateFormat15(theme) { return generateFormat5(theme); }
+        // フォーマット7: 縦スクロールリスト型
+        function generateFormat7(theme) {
+            return `
+                <style>
+                    .f7-container { border: 2px solid ${theme.primary}; }
+                    .f7-header { background: ${theme.primary}; color: white; padding: 3mm; text-align: center; font-size: 18pt; font-weight: bold; }
+                    .f7-month { border-bottom: 2px solid ${theme.primary}; padding: 3mm; }
+                    .f7-month:last-child { border-bottom: none; }
+                    .f7-month-title { font-size: 12pt; font-weight: bold; background: ${theme.header}; padding: 2mm; margin-bottom: 2mm; }
+                    .f7-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2mm; font-size: 8pt; }
+                    .f7-item { padding: 1mm; border: 1px solid #ddd; }
+                    .f7-item-label { font-weight: bold; color: #666; font-size: 7pt; }
+                    .f7-total { background: ${theme.total}; padding: 2mm; margin-top: 2mm; text-align: center; font-weight: bold; font-size: 10pt; }
+                </style>
+                <div class="f7-container">
+                    <div class="f7-header">給与明細一覧</div>
+                    ${monthData.map((d, i) => `
+                        <div class="f7-month">
+                            <div class="f7-month-title">${d.issueDate || (i+1)+'月'} / ${d.employeeName || '未設定'}</div>
+                            <div class="f7-grid">
+                                <div class="f7-item"><div class="f7-item-label">労働日数</div>${d.workDays || '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">労働時間</div>${d.workHours || '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">残業時間</div>${d.overtimeHours || '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">基本給</div>${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">通勤費</div>${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">所得税</div>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">住民税</div>${d.residentTax ? formatNumber(d.residentTax) : '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">健保</div>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">年金</div>${d.pension ? formatNumber(d.pension) : '-'}</div>
+                                <div class="f7-item"><div class="f7-item-label">雇保</div>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</div>
+                            </div>
+                            <div class="f7-total">手取: ${calcTotal(d, 'payment') - calcTotal(d, 'deduction') > 0 ? formatNumber(calcTotal(d, 'payment') - calcTotal(d, 'deduction')) : '-'}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // フォーマット8: 横長ワイド型（項目を横に配置）
+        function generateFormat8(theme) {
+            const months = monthData.filter(d => d.baseSalary || d.employeeName);
+            return `
+                <style>
+                    .f8-header { text-align: center; font-size: 20pt; margin-bottom: 3mm; padding: 3mm; background: ${theme.header}; border-top: 4px solid ${theme.primary}; border-bottom: 4px solid ${theme.primary}; }
+                    .f8-section { margin-bottom: 3mm; }
+                    .f8-section-title { background: ${theme.primary}; color: white; padding: 2mm; font-size: 11pt; font-weight: bold; }
+                    .f8-table { width: 100%; border-collapse: collapse; border: 2px solid ${theme.primary}; }
+                    .f8-table th { background: ${theme.header}; padding: 1.5mm; font-size: 9pt; border: 1px solid ${theme.primary}; }
+                    .f8-table td { padding: 1.5mm; font-size: 8pt; border: 1px solid #ccc; text-align: right; }
+                    .f8-table td.label { text-align: left; font-weight: bold; background: ${theme.header}; }
+                </style>
+                <div class="f8-header">給与支給明細書（6ヶ月）</div>
+                <div class="f8-section">
+                    <div class="f8-section-title">■ 支給項目</div>
+                    <table class="f8-table">
+                        <tr><td class="label">基本給</td>${monthData.map(d => `<td>${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</td>`).join('')}</tr>
+                        <tr><td class="label">通勤手当</td>${monthData.map(d => `<td>${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</td>`).join('')}</tr>
+                        <tr style="background: ${theme.total}"><td class="label">支給合計</td>${monthData.map(d => `<td style="font-weight:bold">${calcTotal(d, 'payment') > 0 ? formatNumber(calcTotal(d, 'payment')) : '-'}</td>`).join('')}</tr>
+                    </table>
+                </div>
+                <div class="f8-section">
+                    <div class="f8-section-title">■ 控除項目</div>
+                    <table class="f8-table">
+                        <tr><td class="label">所得税</td>${monthData.map(d => `<td>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</td>`).join('')}</tr>
+                        <tr><td class="label">住民税</td>${monthData.map(d => `<td>${d.residentTax ? formatNumber(d.residentTax) : '-'}</td>`).join('')}</tr>
+                        <tr><td class="label">健康保険</td>${monthData.map(d => `<td>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</td>`).join('')}</tr>
+                        <tr><td class="label">厚生年金</td>${monthData.map(d => `<td>${d.pension ? formatNumber(d.pension) : '-'}</td>`).join('')}</tr>
+                        <tr><td class="label">雇用保険</td>${monthData.map(d => `<td>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</td>`).join('')}</tr>
+                        <tr style="background: ${theme.total}"><td class="label">控除合計</td>${monthData.map(d => `<td style="font-weight:bold">${calcTotal(d, 'deduction') > 0 ? formatNumber(calcTotal(d, 'deduction')) : '-'}</td>`).join('')}</tr>
+                    </table>
+                </div>
+                <div class="f8-section">
+                    <div class="f8-section-title" style="font-size: 12pt;">■ 差引支給額</div>
+                    <table class="f8-table">
+                        <tr style="background: ${theme.total}; font-size: 10pt;"><td class="label">手取額</td>${monthData.map(d => {
+                            const net = calcTotal(d, 'payment') - calcTotal(d, 'deduction');
+                            return `<td style="font-weight:bold; color: ${theme.primary}">${net > 0 ? formatNumber(net) : '-'}</td>`;
+                        }).join('')}</tr>
+                    </table>
+                </div>
+            `;
+        }
+
+        // フォーマット9: コンパクト縦積み型
+        function generateFormat9(theme) {
+            return `
+                <style>
+                    .f9-wrapper { border: 3px solid ${theme.primary}; padding: 3mm; }
+                    .f9-title { text-align: center; font-size: 18pt; font-weight: bold; border-bottom: 2px solid ${theme.primary}; padding-bottom: 2mm; margin-bottom: 3mm; }
+                    .f9-months { display: flex; flex-direction: column; gap: 2mm; }
+                    .f9-month { border: 1px solid ${theme.primary}; padding: 2mm; background: ${theme.bg}; }
+                    .f9-month-header { display: flex; justify-content: space-between; background: ${theme.header}; padding: 1.5mm; margin: -2mm -2mm 2mm -2mm; font-weight: bold; font-size: 9pt; }
+                    .f9-details { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1mm; font-size: 7pt; }
+                    .f9-cell { border: 1px solid #ddd; padding: 1mm; text-align: center; }
+                    .f9-cell-label { font-weight: bold; font-size: 6pt; color: #666; }
+                </style>
+                <div class="f9-wrapper">
+                    <div class="f9-title">給与明細書</div>
+                    <div class="f9-months">
+                        ${monthData.map((d, i) => `
+                            <div class="f9-month">
+                                <div class="f9-month-header">
+                                    <span>${d.issueDate || (i+1)+'月'}</span>
+                                    <span>${d.employeeName || '未設定'}</span>
+                                    <span style="color: ${theme.primary}">手取: ${calcTotal(d, 'payment') - calcTotal(d, 'deduction') > 0 ? formatNumber(calcTotal(d, 'payment') - calcTotal(d, 'deduction')) : '-'}</span>
+                                </div>
+                                <div class="f9-details">
+                                    <div class="f9-cell"><div class="f9-cell-label">基本給</div>${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</div>
+                                    <div class="f9-cell"><div class="f9-cell-label">通勤</div>${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</div>
+                                    <div class="f9-cell"><div class="f9-cell-label">所得税</div>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</div>
+                                    <div class="f9-cell"><div class="f9-cell-label">住民税</div>${d.residentTax ? formatNumber(d.residentTax) : '-'}</div>
+                                    <div class="f9-cell"><div class="f9-cell-label">健保</div>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</div>
+                                    <div class="f9-cell"><div class="f9-cell-label">年金</div>${d.pension ? formatNumber(d.pension) : '-'}</div>
+                                    <div class="f9-cell"><div class="f9-cell-label">雇保</div>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</div>
+                                    <div class="f9-cell" style="background: ${theme.total}"><div class="f9-cell-label">支給計</div>${calcTotal(d, 'payment') > 0 ? formatNumber(calcTotal(d, 'payment')) : '-'}</div>
+                                    <div class="f9-cell" style="background: ${theme.total}"><div class="f9-cell-label">控除計</div>${calcTotal(d, 'deduction') > 0 ? formatNumber(calcTotal(d, 'deduction')) : '-'}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // フォーマット10: 3列縦配置型
+        function generateFormat10(theme) {
+            return `
+                <style>
+                    .f10-header { text-align: center; font-size: 20pt; font-weight: bold; padding: 3mm; border: 3px double ${theme.primary}; margin-bottom: 4mm; }
+                    .f10-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+                    .f10-card { border: 2px solid ${theme.primary}; }
+                    .f10-card-title { background: ${theme.primary}; color: white; padding: 2mm; text-align: center; font-weight: bold; font-size: 10pt; }
+                    .f10-table { width: 100%; font-size: 7pt; }
+                    .f10-table tr { border-bottom: 1px solid #ddd; }
+                    .f10-table td { padding: 1mm 2mm; }
+                    .f10-table td:first-child { font-weight: bold; width: 40%; }
+                    .f10-table td:last-child { text-align: right; }
+                    .f10-footer { background: ${theme.total}; padding: 2mm; text-align: center; font-weight: bold; font-size: 9pt; }
+                </style>
+                <div class="f10-header">給与明細書（6ヶ月分）</div>
+                <div class="f10-grid">
+                    ${monthData.map((d, i) => `
+                        <div class="f10-card">
+                            <div class="f10-card-title">${d.issueDate || (i+1)+'月'}<br>${d.employeeName || ''}</div>
+                            <table class="f10-table">
+                                <tr><td>基本給</td><td>${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</td></tr>
+                                <tr><td>通勤手当</td><td>${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</td></tr>
+                                <tr><td>所得税</td><td>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</td></tr>
+                                <tr><td>住民税</td><td>${d.residentTax ? formatNumber(d.residentTax) : '-'}</td></tr>
+                                <tr><td>健康保険</td><td>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</td></tr>
+                                <tr><td>厚生年金</td><td>${d.pension ? formatNumber(d.pension) : '-'}</td></tr>
+                                <tr><td>雇用保険</td><td>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</td></tr>
+                            </table>
+                            <div class="f10-footer">
+                                差引支給額<br>
+                                ${calcTotal(d, 'payment') - calcTotal(d, 'deduction') > 0 ? formatNumber(calcTotal(d, 'payment') - calcTotal(d, 'deduction')) : '-'}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // 残りのフォーマット11-30は異なる実装で続けます（一旦代替実装）
+        function generateFormat11(theme) { return generateFormat6(theme); }
+        function generateFormat12(theme) { return generateFormat7(theme); }
+        function generateFormat13(theme) { return generateFormat8(theme); }
+        function generateFormat14(theme) { return generateFormat9(theme); }
+        function generateFormat15(theme) { return generateFormat10(theme); }
         function generateFormat16(theme) { return generateFormat1(theme); }
         function generateFormat17(theme) { return generateFormat2(theme); }
         function generateFormat18(theme) { return generateFormat3(theme); }
         function generateFormat19(theme) { return generateFormat4(theme); }
         function generateFormat20(theme) { return generateFormat5(theme); }
-        function generateFormat21(theme) { return generateFormat1(theme); }
-        function generateFormat22(theme) { return generateFormat2(theme); }
-        function generateFormat23(theme) { return generateFormat3(theme); }
-        function generateFormat24(theme) { return generateFormat4(theme); }
-        function generateFormat25(theme) { return generateFormat5(theme); }
+        function generateFormat21(theme) { return generateFormat6(theme); }
+        function generateFormat22(theme) { return generateFormat7(theme); }
+        function generateFormat23(theme) { return generateFormat8(theme); }
+        function generateFormat24(theme) { return generateFormat9(theme); }
+        function generateFormat25(theme) { return generateFormat10(theme); }
         function generateFormat26(theme) { return generateFormat1(theme); }
         function generateFormat27(theme) { return generateFormat2(theme); }
         function generateFormat28(theme) { return generateFormat3(theme); }

@@ -1,6 +1,6 @@
 # 給与明細書作成ツール v3.0（30フォーマット対応版）
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kazunarihonda83-jpg/-kazunarihonda83-jpg/tree/main/salary-slip-generator)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kazunarihonda83-jpg/-kazunarihonda83-jpg&project-name=salary-slip-generator&repository-name=salary-slip-generator)
 
 ## 🎉 新バージョンの特徴
 
@@ -13,7 +13,7 @@ Webブラウザで動作する本格的な給与明細書作成ツールです�
 
 ### Vercelでデプロイ（推奨）
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kazunarihonda83-jpg/-kazunarihonda83-jpg/tree/main/salary-slip-generator)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kazunarihonda83-jpg/-kazunarihonda83-jpg&project-name=salary-slip-generator&repository-name=salary-slip-generator)
 
 1. 上のボタンをクリック
 2. GitHubアカウントでログイン

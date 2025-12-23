@@ -1544,33 +1544,30 @@
 
         // 認証チェック（LocalStorageモード）
         function checkAuth() {
-            // LocalStorageモード - 認証不要
-            showGuestInfo();
+            // LocalStorageモード - ログイン不要でデータ保存可能
+            const userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = `
+                <div class="user-info" style="background: #e8f5e9; padding: 10px; border-radius: 5px; text-align: center;">
+                    ✅ <span style="font-weight: bold; color: #2e7d32;">LocalStorageモード</span><br>
+                    <small style="color: #555;">ログイン不要でデータ保存・管理ができます</small>
+                </div>
+            `;
+            userInfoDiv.style.display = 'block';
+            // ログインボタンを非表示
+            const authButtons = document.getElementById('authButtons');
+            if (authButtons) {
+                authButtons.style.display = 'none';
+            }
         }
 
-        // ユーザー情報表示
+        // ユーザー情報表示（未使用 - LocalStorageモードでは不要）
         function showUserInfo(user) {
-            const userInfoDiv = document.getElementById('userInfo');
-            userInfoDiv.innerHTML = `
-                <div class="user-info">
-                    <span>👤 <span class="username">${user}</span> でログイン中</span>
-                </div>
-            `;
-            userInfoDiv.style.display = 'block';
-            document.getElementById('authButtons').style.display = 'block';
+            // LocalStorageモードでは使用しない
         }
 
-        // ゲスト情報表示
+        // ゲスト情報表示（未使用 - LocalStorageモードでは不要）
         function showGuestInfo() {
-            const userInfoDiv = document.getElementById('userInfo');
-            userInfoDiv.innerHTML = `
-                <div class="guest-info">
-                    ⚠️ ゲストモード（データ保存機能は使えません）<br>
-                    <a href="login.html" style="color: #667eea; text-decoration: underline;">ログイン</a>してデータを保存できます
-                </div>
-            `;
-            userInfoDiv.style.display = 'block';
-            document.getElementById('authButtons').style.display = 'none';
+            // LocalStorageモードでは使用しない
         }
 
         // 通知表示

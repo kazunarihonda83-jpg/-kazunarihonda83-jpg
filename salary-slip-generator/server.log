@@ -1,0 +1,16 @@
+✅ データベース初期化完了
+🚀 給与明細書作成ツール - サーバー起動中...
+📍 アクセスURL: http://0.0.0.0:8001
+ * Serving Flask app 'server'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8001
+ * Running on http://169.254.0.21:8001
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+✅ データベース初期化完了
+🚀 給与明細書作成ツール - サーバー起動中...
+📍 アクセスURL: http://0.0.0.0:8001
+ * Debugger is active!
+ * Debugger PIN: 122-972-965

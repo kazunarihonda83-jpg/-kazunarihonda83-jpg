@@ -679,7 +679,10 @@
                         return `<td>${total > 0 ? formatNumber(total) : '-'}</td>`;
                     }).join('')}</tr>
                     <tr><td class="label">所得税</td>${monthData.map(d => `<td>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</td>`).join('')}</tr>
+                    <tr><td class="label">住民税</td>${monthData.map(d => `<td>${d.residentTax ? formatNumber(d.residentTax) : '-'}</td>`).join('')}</tr>
                     <tr><td class="label">健康保険</td>${monthData.map(d => `<td>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</td>`).join('')}</tr>
+                    <tr><td class="label">厚生年金</td>${monthData.map(d => `<td>${d.pension ? formatNumber(d.pension) : '-'}</td>`).join('')}</tr>
+                    <tr><td class="label">雇用保険</td>${monthData.map(d => `<td>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</td>`).join('')}</tr>
                     <tr class="format1-total"><td class="label">控除合計</td>${monthData.map(d => {
                         const total = calcTotal(d, 'deduction');
                         return `<td>${total > 0 ? formatNumber(total) : '-'}</td>`;
@@ -714,6 +717,11 @@
                             <div class="format2-row"><span class="format2-label">労働日数</span><span class="format2-value">${d.workDays || '-'}日</span></div>
                             <div class="format2-row"><span class="format2-label">基本給</span><span class="format2-value">${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</span></div>
                             <div class="format2-row"><span class="format2-label">通勤費</span><span class="format2-value">${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</span></div>
+                            <div class="format2-row"><span class="format2-label">所得税</span><span class="format2-value">${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</span></div>
+                            <div class="format2-row"><span class="format2-label">住民税</span><span class="format2-value">${d.residentTax ? formatNumber(d.residentTax) : '-'}</span></div>
+                            <div class="format2-row"><span class="format2-label">健康保険</span><span class="format2-value">${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</span></div>
+                            <div class="format2-row"><span class="format2-label">厚生年金</span><span class="format2-value">${d.pension ? formatNumber(d.pension) : '-'}</span></div>
+                            <div class="format2-row"><span class="format2-label">雇用保険</span><span class="format2-value">${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</span></div>
                             <div class="format2-total">
                                 支給計: ${calcTotal(d, 'payment') > 0 ? formatNumber(calcTotal(d, 'payment')) : '-'} | 
                                 控除計: ${calcTotal(d, 'deduction') > 0 ? formatNumber(calcTotal(d, 'deduction')) : '-'} | 
@@ -738,14 +746,20 @@
                     .format3-table td { border: 1px solid #ccc; padding: 1.5mm; font-size: 7pt; text-align: right; }
                     .format3-table td.label { text-align: left; font-weight: bold; }
                 </style>
-                <div class="format3-header">半期給与明細書</div>
+                <div class="format3-header">給与明細書（6ヶ月分）</div>
                 <div class="format3-columns">
                     <div class="format3-col">
-                        <h2>前期（1月～3月）</h2>
+                        <h2>1月～3月</h2>
                         <table class="format3-table">
                             <tr><th style="width:30%">項目</th>${[0,1,2].map(i => `<th>${monthData[i].issueDate || (i+1)+'月'}</th>`).join('')}</tr>
                             <tr><td class="label">氏名</td>${[0,1,2].map(i => `<td style="text-align:center">${monthData[i].employeeName || '-'}</td>`).join('')}</tr>
                             <tr><td class="label">基本給</td>${[0,1,2].map(i => `<td>${monthData[i].baseSalary ? formatNumber(monthData[i].baseSalary) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">通勤手当</td>${[0,1,2].map(i => `<td>${monthData[i].commuteAllowance ? formatNumber(monthData[i].commuteAllowance) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">所得税</td>${[0,1,2].map(i => `<td>${monthData[i].incomeTax ? formatNumber(monthData[i].incomeTax) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">住民税</td>${[0,1,2].map(i => `<td>${monthData[i].residentTax ? formatNumber(monthData[i].residentTax) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">健康保険</td>${[0,1,2].map(i => `<td>${monthData[i].healthInsurance ? formatNumber(monthData[i].healthInsurance) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">厚生年金</td>${[0,1,2].map(i => `<td>${monthData[i].pension ? formatNumber(monthData[i].pension) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">雇用保険</td>${[0,1,2].map(i => `<td>${monthData[i].employmentInsurance ? formatNumber(monthData[i].employmentInsurance) : '-'}</td>`).join('')}</tr>
                             <tr><td class="label">手取額</td>${[0,1,2].map(i => {
                                 const net = calcTotal(monthData[i], 'payment') - calcTotal(monthData[i], 'deduction');
                                 return `<td style="font-weight:bold">${net > 0 ? formatNumber(net) : '-'}</td>`;
@@ -753,11 +767,17 @@
                         </table>
                     </div>
                     <div class="format3-col">
-                        <h2>後期（4月～6月）</h2>
+                        <h2>4月～6月</h2>
                         <table class="format3-table">
                             <tr><th style="width:30%">項目</th>${[3,4,5].map(i => `<th>${monthData[i].issueDate || (i+1)+'月'}</th>`).join('')}</tr>
                             <tr><td class="label">氏名</td>${[3,4,5].map(i => `<td style="text-align:center">${monthData[i].employeeName || '-'}</td>`).join('')}</tr>
                             <tr><td class="label">基本給</td>${[3,4,5].map(i => `<td>${monthData[i].baseSalary ? formatNumber(monthData[i].baseSalary) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">通勤手当</td>${[3,4,5].map(i => `<td>${monthData[i].commuteAllowance ? formatNumber(monthData[i].commuteAllowance) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">所得税</td>${[3,4,5].map(i => `<td>${monthData[i].incomeTax ? formatNumber(monthData[i].incomeTax) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">住民税</td>${[3,4,5].map(i => `<td>${monthData[i].residentTax ? formatNumber(monthData[i].residentTax) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">健康保険</td>${[3,4,5].map(i => `<td>${monthData[i].healthInsurance ? formatNumber(monthData[i].healthInsurance) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">厚生年金</td>${[3,4,5].map(i => `<td>${monthData[i].pension ? formatNumber(monthData[i].pension) : '-'}</td>`).join('')}</tr>
+                            <tr><td class="label">雇用保険</td>${[3,4,5].map(i => `<td>${monthData[i].employmentInsurance ? formatNumber(monthData[i].employmentInsurance) : '-'}</td>`).join('')}</tr>
                             <tr><td class="label">手取額</td>${[3,4,5].map(i => {
                                 const net = calcTotal(monthData[i], 'payment') - calcTotal(monthData[i], 'deduction');
                                 return `<td style="font-weight:bold">${net > 0 ? formatNumber(net) : '-'}</td>`;
@@ -786,10 +806,13 @@
                             <div class="format4-card-header">${d.issueDate || (i+1)+'月'}</div>
                             <div style="text-align: center; font-weight: bold; padding: 1mm 0; font-size: 9pt;">${d.employeeName || '氏名未設定'}</div>
                             <div class="format4-item"><span>労働日</span><span>${d.workDays || '-'}日</span></div>
-                            <div class="format4-item"><span>労働時間</span><span>${d.workHours || '-'}h</span></div>
-                            <div class="format4-item"><span>残業</span><span>${d.overtimeHours || '-'}h</span></div>
                             <div class="format4-item"><span>基本給</span><span>${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</span></div>
                             <div class="format4-item"><span>手当</span><span>${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</span></div>
+                            <div class="format4-item"><span>所得税</span><span>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</span></div>
+                            <div class="format4-item"><span>住民税</span><span>${d.residentTax ? formatNumber(d.residentTax) : '-'}</span></div>
+                            <div class="format4-item"><span>健保</span><span>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</span></div>
+                            <div class="format4-item"><span>年金</span><span>${d.pension ? formatNumber(d.pension) : '-'}</span></div>
+                            <div class="format4-item"><span>雇保</span><span>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</span></div>
                             <div class="format4-total">
                                 手取額<br>
                                 <span style="font-size: 11pt; color: ${theme.primary};">
@@ -824,15 +847,15 @@
                         <tr>
                             <th rowspan="2">支給月</th>
                             <th rowspan="2">氏名</th>
-                            <th colspan="3">勤怠</th>
+                            <th colspan="2">勤怠</th>
                             <th colspan="2">支給</th>
-                            <th colspan="2">控除</th>
+                            <th colspan="5">控除</th>
                             <th rowspan="2">差引支給額</th>
                         </tr>
                         <tr>
-                            <th>日数</th><th>時間</th><th>残業</th>
+                            <th>日数</th><th>時間</th>
                             <th>基本給</th><th>手当</th>
-                            <th>税金</th><th>保険</th>
+                            <th>所得税</th><th>住民税</th><th>健保</th><th>年金</th><th>雇保</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -846,11 +869,13 @@
                                     <td>${d.employeeName || '-'}</td>
                                     <td>${d.workDays || '-'}</td>
                                     <td>${d.workHours || '-'}</td>
-                                    <td>${d.overtimeHours || '-'}</td>
                                     <td>${d.baseSalary ? formatNumber(d.baseSalary) : '-'}</td>
                                     <td>${d.commuteAllowance ? formatNumber(d.commuteAllowance) : '-'}</td>
-                                    <td>${(parseInt(d.incomeTax)||0) + (parseInt(d.residentTax)||0) > 0 ? formatNumber((parseInt(d.incomeTax)||0) + (parseInt(d.residentTax)||0)) : '-'}</td>
-                                    <td>${(parseInt(d.healthInsurance)||0) + (parseInt(d.pension)||0) > 0 ? formatNumber((parseInt(d.healthInsurance)||0) + (parseInt(d.pension)||0)) : '-'}</td>
+                                    <td>${d.incomeTax ? formatNumber(d.incomeTax) : '-'}</td>
+                                    <td>${d.residentTax ? formatNumber(d.residentTax) : '-'}</td>
+                                    <td>${d.healthInsurance ? formatNumber(d.healthInsurance) : '-'}</td>
+                                    <td>${d.pension ? formatNumber(d.pension) : '-'}</td>
+                                    <td>${d.employmentInsurance ? formatNumber(d.employmentInsurance) : '-'}</td>
                                     <td style="font-weight:bold; background: ${theme.total}">${net > 0 ? formatNumber(net) : '-'}</td>
                                 </tr>
                             `;

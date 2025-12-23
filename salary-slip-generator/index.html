@@ -1541,37 +1541,9 @@
         let currentDataId = null;
         let authToken = localStorage.getItem('authToken');
         let username = localStorage.getItem('username');
-        
-        // API利用可能かチェック
-        let apiAvailable = false;
-
-        // API利用可能性をチェック
-        async function checkApiAvailability() {
-            try {
-                const response = await fetch(`${API_BASE}/api/verify`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${authToken || 'test'}` }
-                });
-                apiAvailable = response.status !== 404;
-            } catch (error) {
-                apiAvailable = false;
-            }
-            
-            if (!apiAvailable) {
-                console.log('APIサーバーが利用できません。localStorageモードで動作します。');
-            }
-        }
 
         // 認証チェック
         async function checkAuth() {
-            await checkApiAvailability();
-            
-            if (!apiAvailable) {
-                // APIなしモード（静的ホスティング）
-                showGuestInfo();
-                return;
-            }
-            
             if (authToken) {
                 try {
                     const response = await fetch(`${API_BASE}/api/verify`, {

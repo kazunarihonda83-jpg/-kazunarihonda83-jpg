@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与明細書作成ツール</title>
+    <style>
+        /* ===== 基本スタイル ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "MS Mincho", "游明朝", "Yu Mincho", "Hiragino Mincho ProN", serif !important;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        /* ===== 入力フォームエリア ===== */
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-section h1 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 28px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .form-group h2 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .template-option {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .template-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .template-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .template-option .template-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .template-option .template-desc {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .template-option.active .template-desc {
+            color: #fff;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        label .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .date-inputs select {
+            flex: 1;
+        }
+
+        /* ===== ボタンスタイル ===== */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-pdf {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-pdf:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-clear {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3);
+        }
+
+        .btn-save {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        /* ===== 給与明細書プレビューエリア ===== */
+        .preview-section {
+            background: white;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 20px;
+            overflow: auto;
+            max-height: calc(100vh - 40px);
+        }
+
+        .salary-slip {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            background: white;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* ===== 共通スタイル ===== */
+        .slip-header {
+            text-align: center;
+            margin-bottom: 8mm;
+        }
+
+        .company-name {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+            min-height: 8mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2mm;
+        }
+
+        .company-name input {
+            width: 100%;
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            border: none;
+            background: transparent;
+        }
+
+        /* ===== フォーマット1: 横型レイアウト（左右分割） ===== */
+        .format-1 .slip-header {
+            border: 3px solid #000;
+            padding: 5mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-1 .slip-header h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin-bottom: 3mm;
+        }
+
+        .format-1 .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5mm;
+        }
+
+        .format-1 .left-section,
+        .format-1 .right-section {
+            border: 2px solid #000;
+            padding: 3mm;
+        }
+
+        .format-1 .info-row {
+            display: flex;
+            border-bottom: 1px solid #999;
+            padding: 2mm 0;
+        }
+
+        .format-1 .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .format-1 .info-label {
+            width: 40%;
+            font-weight: bold;
+            font-size: 10pt;
+        }
+
+        .format-1 .info-value {
+            width: 60%;
+            font-size: 10pt;
+        }
+
+        .format-1 .section-title {
+            background: #000;
+            color: white;
+            padding: 2mm;
+            font-size: 11pt;
+            font-weight: bold;
+            margin: 3mm 0 2mm 0;
+        }
+
+        .format-1 .amount-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2mm;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .format-1 .amount-row.total {
+            background: #f0f0f0;
+            border: 2px solid #000;
+            font-weight: bold;
+            font-size: 11pt;
+        }
+
+        .format-1 .final-box {
+            grid-column: 1 / -1;
+            background: #000;
+            color: white;
+            padding: 4mm;
+            margin-top: 5mm;
+            text-align: center;
+            border: 3px solid #000;
+        }
+
+        .format-1 .final-box .label {
+            font-size: 12pt;
+            margin-bottom: 2mm;
+        }
+
+        .format-1 .final-box .amount {
+            font-size: 18pt;
+            font-weight: bold;
+        }
+
+        /* ===== フォーマット2: 表形式（全項目一覧） ===== */
+        .format-2 .slip-header {
+            border-bottom: 4px double #000;
+            padding-bottom: 3mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-2 .slip-header h1 {
+            font-size: 22pt;
+            font-weight: bold;
+            letter-spacing: 10px;
+        }
+
+        .format-2 .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2mm;
+            margin-bottom: 5mm;
+            border: 2px solid #000;
+            padding: 3mm;
+            background: #f9f9f9;
+        }
+
+        .format-2 .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .format-2 .info-item .label {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 1mm;
+        }
+
+        .format-2 .info-item .value {
+            font-size: 11pt;
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+            padding-bottom: 1mm;
+        }
+
+        .format-2 .main-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 3px solid #000;
+        }
+
+        .format-2 .main-table th {
+            background: #e0e0e0;
+            border: 1px solid #000;
+            padding: 2mm;
+            font-size: 10pt;
+            text-align: center;
+        }
+
+        .format-2 .main-table td {
+            border: 1px solid #666;
+            padding: 2mm;
+            font-size: 10pt;
+        }
+
+        .format-2 .main-table td.label {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .format-2 .main-table td.amount {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .format-2 .main-table tr.category-header td {
+            background: #d0d0d0;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #000;
+        }
+
+        .format-2 .main-table tr.total-row td {
+            background: #e8e8e8;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+        }
+
+        .format-2 .final-row {
+            margin-top: 5mm;
+            border: 4px double #000;
+            padding: 4mm;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f0f0f0;
+        }
+
+        .format-2 .final-row .label {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+
+        .format-2 .final-row .amount {
+            font-size: 18pt;
+            font-weight: bold;
+        }
+
+        /* ===== フォーマット3: 縦長シンプル（明細中心） ===== */
+        .format-3 .slip-header {
+            text-align: left;
+            border-left: 8px solid #000;
+            padding-left: 5mm;
+            margin-bottom: 8mm;
+        }
+
+        .format-3 .slip-header h1 {
+            font-size: 24pt;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin-bottom: 2mm;
+        }
+
+        .format-3 .basic-info {
+            border: 2px solid #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+            background: #fafafa;
+        }
+
+        .format-3 .basic-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3mm;
+        }
+
+        .format-3 .basic-info-item {
+            display: flex;
+            padding: 2mm 0;
+            border-bottom: 1px dotted #999;
+        }
+
+        .format-3 .basic-info-item .label {
+            width: 35%;
+            font-size: 10pt;
+            font-weight: bold;
+        }
+
+        .format-3 .basic-info-item .value {
+            width: 65%;
+            font-size: 10pt;
+        }
+
+        .format-3 .detail-section {
+            margin-bottom: 5mm;
+        }
+
+        .format-3 .detail-title {
+            background: #000;
+            color: white;
+            padding: 2mm 3mm;
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+
+        .format-3 .detail-table {
+            width: 100%;
+            border: 2px solid #000;
+            border-top: none;
+            border-collapse: collapse;
+        }
+
+        .format-3 .detail-table td {
+            padding: 2mm 3mm;
+            border-bottom: 1px solid #ddd;
+            font-size: 10pt;
+        }
+
+        .format-3 .detail-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .format-3 .detail-table td.label {
+            width: 60%;
+        }
+
+        .format-3 .detail-table td.amount {
+            width: 40%;
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .format-3 .detail-table tr.subtotal td {
+            background: #e8e8e8;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            font-size: 11pt;
+        }
+
+        .format-3 .net-payment {
+            border: 4px solid #000;
+            padding: 5mm;
+            margin-top: 5mm;
+            text-align: right;
+        }
+
+        .format-3 .net-payment .label {
+            font-size: 13pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+        }
+
+        .format-3 .net-payment .amount {
+            font-size: 20pt;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            padding-top: 2mm;
+            margin-top: 2mm;
+        }
+
+        /* ===== フォーマット4: 伝票風（控え付き風） ===== */
+        .format-4 .document-header {
+            border: 3px double #000;
+            padding: 3mm;
+            margin-bottom: 3mm;
+            text-align: center;
+        }
+
+        .format-4 .document-header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 8px;
+            margin-bottom: 2mm;
+        }
+
+        .format-4 .document-header .doc-number {
+            font-size: 10pt;
+            text-align: right;
+        }
+
+        .format-4 .recipient-box {
+            border: 2px solid #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-4 .recipient-info {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 2mm;
+        }
+
+        .format-4 .recipient-label {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-right: 3mm;
+        }
+
+        .format-4 .recipient-value {
+            font-size: 13pt;
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+            flex: 1;
+            padding-bottom: 1mm;
+        }
+
+        .format-4 .recipient-honorific {
+            font-size: 11pt;
+            margin-left: 2mm;
+        }
+
+        .format-4 .period-info {
+            font-size: 10pt;
+            color: #333;
+        }
+
+        .format-4 .amount-table {
+            width: 100%;
+            border: 2px solid #000;
+            border-collapse: collapse;
+            margin-bottom: 5mm;
+        }
+
+        .format-4 .amount-table th {
+            background: #f0f0f0;
+            border: 1px solid #000;
+            padding: 2mm;
+            font-size: 10pt;
+            text-align: left;
+        }
+
+        .format-4 .amount-table td {
+            border: 1px solid #666;
+            padding: 2mm;
+            font-size: 10pt;
+        }
+
+        .format-4 .amount-table td.amount {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .format-4 .amount-table tr.sum-row {
+            background: #e8e8e8;
+        }
+
+        .format-4 .amount-table tr.sum-row td {
+            font-weight: bold;
+            border-top: 2px solid #000;
+        }
+
+        .format-4 .total-amount-box {
+            border: 4px double #000;
+            padding: 4mm;
+            margin-bottom: 5mm;
+            background: #fafafa;
+        }
+
+        .format-4 .total-amount-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2mm 0;
+        }
+
+        .format-4 .total-amount-line .label {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+
+        .format-4 .total-amount-line .amount {
+            font-size: 18pt;
+            font-weight: bold;
+        }
+
+        .format-4 .notes {
+            border: 1px solid #000;
+            padding: 3mm;
+            font-size: 9pt;
+            min-height: 15mm;
+        }
+
+        /* ===== フォーマット5: 簡易横書き（コンパクト） ===== */
+        .format-5 .slip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #000;
+            padding-bottom: 3mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-5 .slip-header h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            letter-spacing: 5px;
+        }
+
+        .format-5 .slip-header .issue-date {
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        .format-5 .employee-section {
+            border: 2px solid #000;
+            padding: 3mm;
+            margin-bottom: 5mm;
+            background: #f9f9f9;
+        }
+
+        .format-5 .employee-name {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+            padding-bottom: 2mm;
+            border-bottom: 2px solid #000;
+        }
+
+        .format-5 .employee-details {
+            display: flex;
+            gap: 5mm;
+            font-size: 10pt;
+        }
+
+        .format-5 .detail-item {
+            display: flex;
+            gap: 2mm;
+        }
+
+        .format-5 .detail-item .label {
+            font-weight: bold;
+        }
+
+        .format-5 .three-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 3mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-5 .column-box {
+            border: 2px solid #000;
+        }
+
+        .format-5 .column-header {
+            background: #e0e0e0;
+            padding: 2mm;
+            font-size: 11pt;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #000;
+        }
+
+        .format-5 .column-content {
+            padding: 2mm;
+        }
+
+        .format-5 .item-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5mm 0;
+            border-bottom: 1px dotted #ccc;
+            font-size: 9pt;
+        }
+
+        .format-5 .item-line:last-child {
+            border-bottom: none;
+        }
+
+        .format-5 .item-line.total {
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            font-weight: bold;
+            font-size: 10pt;
+            padding: 2mm 0;
+            margin-top: 2mm;
+        }
+
+        .format-5 .summary-box {
+            border: 3px solid #000;
+            padding: 4mm;
+            background: #f5f5f5;
+        }
+
+        .format-5 .summary-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 2mm 0;
+            font-size: 11pt;
+        }
+
+        .format-5 .summary-line.final {
+            border-top: 2px solid #000;
+            margin-top: 2mm;
+            padding-top: 3mm;
+            font-size: 16pt;
+            font-weight: bold;
+        }
+
+        /* ===== フォーマット6: 縦書き風レイアウト ===== */
+        .format-6 .document-frame {
+            border: 4px double #000;
+            padding: 5mm;
+        }
+
+        .format-6 .title-section {
+            text-align: center;
+            margin-bottom: 5mm;
+            padding-bottom: 3mm;
+            border-bottom: 2px solid #000;
+        }
+
+        .format-6 .title-section h1 {
+            font-size: 22pt;
+            font-weight: bold;
+            letter-spacing: 12px;
+            margin-bottom: 3mm;
+        }
+
+        .format-6 .meta-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5mm;
+            font-size: 10pt;
+        }
+
+        .format-6 .employee-box {
+            border: 2px solid #000;
+            padding: 3mm;
+            margin-bottom: 5mm;
+            min-height: 20mm;
+        }
+
+        .format-6 .employee-label {
+            font-size: 10pt;
+            color: #666;
+            margin-bottom: 2mm;
+        }
+
+        .format-6 .employee-name-large {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            padding: 3mm 0;
+            border: 2px solid #000;
+            background: #fafafa;
+        }
+
+        .format-6 .dual-column {
+            display: grid;
+            grid-template-columns: 55% 45%;
+            gap: 5mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-6 .data-box {
+            border: 2px solid #000;
+        }
+
+        .format-6 .data-box-title {
+            background: #d0d0d0;
+            padding: 2mm;
+            font-size: 11pt;
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+            text-align: center;
+        }
+
+        .format-6 .data-box-content {
+            padding: 2mm;
+        }
+
+        .format-6 .data-row {
+            display: flex;
+            padding: 1.5mm 0;
+            border-bottom: 1px solid #ddd;
+            font-size: 10pt;
+        }
+
+        .format-6 .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .format-6 .data-row .label {
+            width: 50%;
+            font-weight: bold;
+        }
+
+        .format-6 .data-row .value {
+            width: 50%;
+            text-align: right;
+        }
+
+        .format-6 .data-row.highlight {
+            background: #f0f0f0;
+            border: 1px solid #000;
+            font-weight: bold;
+            padding: 2mm;
+            margin: 2mm 0;
+        }
+
+        .format-6 .grand-total {
+            border: 4px solid #000;
+            padding: 5mm;
+            text-align: center;
+            background: #f5f5f5;
+            margin-top: 5mm;
+        }
+
+        .format-6 .grand-total .label {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 3mm;
+        }
+
+        .format-6 .grand-total .amount {
+            font-size: 22pt;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            padding-top: 3mm;
+        }
+
+        /* ===== レスポンシブデザイン ===== */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-section {
+                position: static;
+            }
+
+            .salary-slip {
+                width: 100%;
+                transform: scale(0.8);
+                transform-origin: top center;
+            }
+
+            .template-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-section {
+                padding: 20px;
+            }
+
+            .salary-slip {
+                transform: scale(0.6);
+                min-height: auto;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .template-selector {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== 印刷・PDF出力スタイル ===== */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0;
+            }
+
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+
+            .container {
+                display: block;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .form-section,
+            .button-group,
+            .notification {
+                display: none !important;
+            }
+
+            .preview-section {
+                box-shadow: none;
+                border-radius: 0;
+                position: static;
+                margin: 0;
+                padding: 0;
+            }
+
+            .salary-slip {
+                width: 210mm;
+                min-height: 297mm;
+                padding: 20mm;
+                margin: 0;
+                box-shadow: none;
+                page-break-after: avoid;
+                transform: none !important;
+            }
+
+            .company-name input {
+                border: none;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color-adjust: exact;
+            }
+        }
+
+        /* ===== 保存通知 ===== */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification">データを保存しました</div>
+
+    <div class="container">
+        <!-- ===== 入力フォームセクション ===== -->
+        <div class="form-section">
+            <h1>給与明細書作成ツール</h1>
+
+            <!-- テンプレート選択 -->
+            <div class="form-group">
+                <h2>デザインフォーマット選択</h2>
+                <div class="template-selector">
+                    <div class="template-option active" data-template="1" onclick="selectTemplate(1)">
+                        <div class="template-name">横型分割</div>
+                        <div class="template-desc">左右レイアウト</div>
+                    </div>
+                    <div class="template-option" data-template="2" onclick="selectTemplate(2)">
+                        <div class="template-name">表形式</div>
+                        <div class="template-desc">一覧表示</div>
+                    </div>
+                    <div class="template-option" data-template="3" onclick="selectTemplate(3)">
+                        <div class="template-name">縦長型</div>
+                        <div class="template-desc">明細中心</div>
+                    </div>
+                    <div class="template-option" data-template="4" onclick="selectTemplate(4)">
+                        <div class="template-name">伝票風</div>
+                        <div class="template-desc">控え付き風</div>
+                    </div>
+                    <div class="template-option" data-template="5" onclick="selectTemplate(5)">
+                        <div class="template-name">横書簡易</div>
+                        <div class="template-desc">コンパクト</div>
+                    </div>
+                    <div class="template-option" data-template="6" onclick="selectTemplate(6)">
+                        <div class="template-name">額縁型</div>
+                        <div class="template-desc">正式文書</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 基本情報 -->
+            <div class="form-group">
+                <h2>基本情報</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>会社名 <span class="required">*</span></label>
+                        <input type="text" id="companyName" placeholder="株式会社〇〇">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>発行年月 <span class="required">*</span></label>
+                        <div class="date-inputs">
+                            <select id="issueYear">
+                                <option value="">年</option>
+                            </select>
+                            <select id="issueMonth">
+                                <option value="">月</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>氏名 <span class="required">*</span></label>
+                        <input type="text" id="employeeName" placeholder="山田 太郎">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 労働期間 -->
+            <div class="form-group">
+                <h2>労働期間</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>開始日 <span class="required">*</span></label>
+                        <div class="date-inputs">
+                            <select id="startYear">
+                                <option value="">年</option>
+                            </select>
+                            <select id="startMonth">
+                                <option value="">月</option>
+                            </select>
+                            <select id="startDay">
+                                <option value="">日</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>終了日 <span class="required">*</span></label>
+                        <div class="date-inputs">
+                            <select id="endYear">
+                                <option value="">年</option>
+                            </select>
+                            <select id="endMonth">
+                                <option value="">月</option>
+                            </select>
+                            <select id="endDay">
+                                <option value="">日</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 勤怠情報 -->
+            <div class="form-group">
+                <h2>勤怠情報</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>労働日数 <span class="required">*</span></label>
+                        <input type="number" id="workDays" min="0" step="1" placeholder="20">
+                    </div>
+                    <div class="input-field">
+                        <label>労働時間 <span class="required">*</span></label>
+                        <input type="number" id="workHours" min="0" step="0.5" placeholder="160.0">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>所定時間外労働</label>
+                        <input type="number" id="overtimeHours" min="0" step="0.5" placeholder="0.0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 支給項目 -->
+            <div class="form-group">
+                <h2>支給項目</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>基本給 <span class="required">*</span></label>
+                        <input type="number" id="basicSalary" min="0" step="1000" placeholder="300000">
+                    </div>
+                    <div class="input-field">
+                        <label>非課税通勤費</label>
+                        <input type="number" id="commutingAllowance" min="0" step="1000" placeholder="10000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 控除項目 -->
+            <div class="form-group">
+                <h2>控除項目</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>所得税</label>
+                        <input type="number" id="incomeTax" min="0" step="100" placeholder="15000">
+                    </div>
+                    <div class="input-field">
+                        <label>住民税</label>
+                        <input type="number" id="residentTax" min="0" step="100" placeholder="20000">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>健康保険</label>
+                        <input type="number" id="healthInsurance" min="0" step="100" placeholder="15000">
+                    </div>
+                    <div class="input-field">
+                        <label>厚生年金</label>
+                        <input type="number" id="pensionInsurance" min="0" step="100" placeholder="27000">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>雇用保険</label>
+                        <input type="number" id="employmentInsurance" min="0" step="100" placeholder="1500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ボタン -->
+            <div class="button-group">
+                <button class="btn-save" onclick="saveData()">💾 保存</button>
+                <button class="btn-pdf" onclick="printPDF()">📄 PDF出力</button>
+                <button class="btn-clear" onclick="clearForm()">🗑️ クリア</button>
+            </div>
+        </div>
+
+        <!-- ===== 給与明細書プレビューセクション ===== -->
+        <div class="preview-section">
+            <div class="salary-slip format-1" id="salarySlip">
+                <!-- フォーマット1のHTML構造 -->
+                <div id="format1Content">
+                    <div class="slip-header">
+                        <h1>給　与　明　細　書</h1>
+                        <div class="company-name">
+                            <input type="text" id="companyNamePreview" placeholder="会社名を入力" readonly>
+                        </div>
+                    </div>
+                    <div class="main-content">
+                        <div class="left-section">
+                            <div class="info-row">
+                                <div class="info-label">支給年月</div>
+                                <div class="info-value" id="preview1IssueDate">　</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">氏　名</div>
+                                <div class="info-value" id="preview1EmployeeName">　</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">労働期間</div>
+                                <div class="info-value" id="preview1WorkPeriod">　</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">労働日数</div>
+                                <div class="info-value" id="preview1WorkDays">　</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">労働時間</div>
+                                <div class="info-value" id="preview1WorkHours">　</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">時間外労働</div>
+                                <div class="info-value" id="preview1OvertimeHours">　</div>
+                            </div>
+
+                            <div class="section-title">支給項目</div>
+                            <div class="amount-row">
+                                <span>基本給</span>
+                                <span id="preview1BasicSalary">¥〇</span>
+                            </div>
+                            <div class="amount-row">
+                                <span>通勤費</span>
+                                <span id="preview1CommutingAllowance">¥〇</span>
+                            </div>
+                            <div class="amount-row total">
+                                <span>支給額計</span>
+                                <span id="preview1TotalPayment">¥〇</span>
+                            </div>
+                        </div>
+
+                        <div class="right-section">
+                            <div class="section-title">控除項目</div>
+                            <div class="amount-row">
+                                <span>所得税</span>
+                                <span id="preview1IncomeTax">¥〇</span>
+                            </div>
+                            <div class="amount-row">
+                                <span>住民税</span>
+                                <span id="preview1ResidentTax">¥〇</span>
+                            </div>
+                            <div class="amount-row">
+                                <span>健康保険</span>
+                                <span id="preview1HealthInsurance">¥〇</span>
+                            </div>
+                            <div class="amount-row">
+                                <span>厚生年金</span>
+                                <span id="preview1PensionInsurance">¥〇</span>
+                            </div>
+                            <div class="amount-row">
+                                <span>雇用保険</span>
+                                <span id="preview1EmploymentInsurance">¥〇</span>
+                            </div>
+                            <div class="amount-row total">
+                                <span>控除額計</span>
+                                <span id="preview1TotalDeduction">¥〇</span>
+                            </div>
+                        </div>
+
+                        <div class="final-box">
+                            <div class="label">差引支給額</div>
+                            <div class="amount" id="preview1NetPayment">¥〇</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- フォーマット2～6のコンテナ（JavaScriptで切り替え） -->
+                <div id="format2Content" style="display:none;"></div>
+                <div id="format3Content" style="display:none;"></div>
+                <div id="format4Content" style="display:none;"></div>
+                <div id="format5Content" style="display:none;"></div>
+                <div id="format6Content" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== グローバル変数 =====
+        let currentTemplate = 1;
+
+        // ===== 初期化処理 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSelects();
+            loadData();
+            attachEventListeners();
+            renderTemplate(1);
+        });
+
+        /**
+         * テンプレート選択
+         */
+        function selectTemplate(templateNumber) {
+            currentTemplate = templateNumber;
+            
+            document.querySelectorAll('.template-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`[data-template="${templateNumber}"]`).classList.add('active');
+            
+            renderTemplate(templateNumber);
+            updatePreview();
+            saveData();
+        }
+
+        /**
+         * テンプレートのレンダリング
+         */
+        function renderTemplate(templateNumber) {
+            const salarySlip = document.getElementById('salarySlip');
+            salarySlip.className = `salary-slip format-${templateNumber}`;
+            
+            // 全てのフォーマットコンテンツを非表示
+            for (let i = 1; i <= 6; i++) {
+                const content = document.getElementById(`format${i}Content`);
+                if (content) content.style.display = 'none';
+            }
+
+            // 選択したフォーマットの構造を生成
+            const content = document.getElementById(`format${templateNumber}Content`);
+            if (content) {
+                content.style.display = 'block';
+                if (content.innerHTML === '') {
+                    content.innerHTML = generateFormatHTML(templateNumber);
+                }
+            }
+        }
+
+        /**
+         * フォーマット別HTML生成
+         */
+        function generateFormatHTML(format) {
+            const templates = {
+                2: `
+                    <div class="slip-header">
+                        <h1>給　与　明　細　書</h1>
+                        <div class="company-name"><input type="text" class="company-preview" placeholder="会社名" readonly></div>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item"><div class="label">支給年月</div><div class="value" data-field="issueDate">　</div></div>
+                        <div class="info-item"><div class="label">氏　名</div><div class="value" data-field="employeeName">　</div></div>
+                        <div class="info-item"><div class="label">労働期間</div><div class="value" data-field="workPeriod">　</div></div>
+                        <div class="info-item"><div class="label">労働日数</div><div class="value" data-field="workDays">　</div></div>
+                    </div>
+                    <table class="main-table">
+                        <thead><tr><th>区分</th><th>項目</th><th>金額</th></tr></thead>
+                        <tbody>
+                            <tr class="category-header"><td colspan="3">勤怠情報</td></tr>
+                            <tr><td rowspan="2">勤怠</td><td class="label">労働時間</td><td class="amount" data-field="workHours">　</td></tr>
+                            <tr><td class="label">時間外労働</td><td class="amount" data-field="overtimeHours">　</td></tr>
+                            <tr class="category-header"><td colspan="3">支給項目</td></tr>
+                            <tr><td rowspan="2">支給</td><td class="label">基本給</td><td class="amount" data-field="basicSalary">¥〇</td></tr>
+                            <tr><td class="label">通勤費</td><td class="amount" data-field="commutingAllowance">¥〇</td></tr>
+                            <tr class="total-row"><td colspan="2">支給額合計</td><td class="amount" data-field="totalPayment">¥〇</td></tr>
+                            <tr class="category-header"><td colspan="3">控除項目</td></tr>
+                            <tr><td rowspan="5">控除</td><td class="label">所得税</td><td class="amount" data-field="incomeTax">¥〇</td></tr>
+                            <tr><td class="label">住民税</td><td class="amount" data-field="residentTax">¥〇</td></tr>
+                            <tr><td class="label">健康保険</td><td class="amount" data-field="healthInsurance">¥〇</td></tr>
+                            <tr><td class="label">厚生年金</td><td class="amount" data-field="pensionInsurance">¥〇</td></tr>
+                            <tr><td class="label">雇用保険</td><td class="amount" data-field="employmentInsurance">¥〇</td></tr>
+                            <tr class="total-row"><td colspan="2">控除額合計</td><td class="amount" data-field="totalDeduction">¥〇</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="final-row">
+                        <div class="label">差引支給額</div>
+                        <div class="amount" data-field="netPayment">¥〇</div>
+                    </div>
+                `,
+                3: `
+                    <div class="slip-header">
+                        <h1>給与明細書</h1>
+                        <div class="company-name"><input type="text" class="company-preview" placeholder="会社名" readonly></div>
+                    </div>
+                    <div class="basic-info">
+                        <div class="basic-info-grid">
+                            <div class="basic-info-item"><div class="label">支給年月</div><div class="value" data-field="issueDate">　</div></div>
+                            <div class="basic-info-item"><div class="label">氏　名</div><div class="value" data-field="employeeName">　</div></div>
+                            <div class="basic-info-item"><div class="label">労働期間</div><div class="value" data-field="workPeriod">　</div></div>
+                            <div class="basic-info-item"><div class="label">労働日数</div><div class="value" data-field="workDays">　</div></div>
+                            <div class="basic-info-item"><div class="label">労働時間</div><div class="value" data-field="workHours">　</div></div>
+                            <div class="basic-info-item"><div class="label">時間外労働</div><div class="value" data-field="overtimeHours">　</div></div>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-title">支給項目</div>
+                        <table class="detail-table">
+                            <tr><td class="label">基本給</td><td class="amount" data-field="basicSalary">¥〇</td></tr>
+                            <tr><td class="label">非課税通勤費</td><td class="amount" data-field="commutingAllowance">¥〇</td></tr>
+                            <tr class="subtotal"><td class="label">支給額合計</td><td class="amount" data-field="totalPayment">¥〇</td></tr>
+                        </table>
+                    </div>
+                    <div class="detail-section">
+                        <div class="detail-title">控除項目</div>
+                        <table class="detail-table">
+                            <tr><td class="label">所得税</td><td class="amount" data-field="incomeTax">¥〇</td></tr>
+                            <tr><td class="label">住民税</td><td class="amount" data-field="residentTax">¥〇</td></tr>
+                            <tr><td class="label">健康保険</td><td class="amount" data-field="healthInsurance">¥〇</td></tr>
+                            <tr><td class="label">厚生年金</td><td class="amount" data-field="pensionInsurance">¥〇</td></tr>
+                            <tr><td class="label">雇用保険</td><td class="amount" data-field="employmentInsurance">¥〇</td></tr>
+                            <tr class="subtotal"><td class="label">控除額合計</td><td class="amount" data-field="totalDeduction">¥〇</td></tr>
+                        </table>
+                    </div>
+                    <div class="net-payment">
+                        <div class="label">差引支給額</div>
+                        <div class="amount" data-field="netPayment">¥〇</div>
+                    </div>
+                `,
+                4: `
+                    <div class="document-header">
+                        <div class="doc-number">No. <span data-field="issueDate"></span></div>
+                        <h1>給　与　明　細　書</h1>
+                        <div class="company-name"><input type="text" class="company-preview" placeholder="会社名" readonly></div>
+                    </div>
+                    <div class="recipient-box">
+                        <div class="recipient-info">
+                            <span class="recipient-label">氏名</span>
+                            <span class="recipient-value" data-field="employeeName">　</span>
+                            <span class="recipient-honorific">殿</span>
+                        </div>
+                        <div class="period-info">
+                            対象期間：<span data-field="workPeriod">　</span>　　
+                            労働日数：<span data-field="workDays">　</span>　　
+                            労働時間：<span data-field="workHours">　</span>　　
+                            時間外：<span data-field="overtimeHours">　</span>
+                        </div>
+                    </div>
+                    <table class="amount-table">
+                        <thead><tr><th>支給項目</th><th>金額</th><th>控除項目</th><th>金額</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td>基本給</td><td class="amount" data-field="basicSalary">¥〇</td>
+                                <td>所得税</td><td class="amount" data-field="incomeTax">¥〇</td>
+                            </tr>
+                            <tr>
+                                <td>通勤費</td><td class="amount" data-field="commutingAllowance">¥〇</td>
+                                <td>住民税</td><td class="amount" data-field="residentTax">¥〇</td>
+                            </tr>
+                            <tr>
+                                <td></td><td></td>
+                                <td>健康保険</td><td class="amount" data-field="healthInsurance">¥〇</td>
+                            </tr>
+                            <tr>
+                                <td></td><td></td>
+                                <td>厚生年金</td><td class="amount" data-field="pensionInsurance">¥〇</td>
+                            </tr>
+                            <tr>
+                                <td></td><td></td>
+                                <td>雇用保険</td><td class="amount" data-field="employmentInsurance">¥〇</td>
+                            </tr>
+                            <tr class="sum-row">
+                                <td>支給額合計</td><td class="amount" data-field="totalPayment">¥〇</td>
+                                <td>控除額合計</td><td class="amount" data-field="totalDeduction">¥〇</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="total-amount-box">
+                        <div class="total-amount-line">
+                            <span class="label">差引支給額</span>
+                            <span class="amount" data-field="netPayment">¥〇</span>
+                        </div>
+                    </div>
+                    <div class="notes">備考：上記の通り支給いたします。</div>
+                `,
+                5: `
+                    <div class="slip-header">
+                        <h1>給与明細書</h1>
+                        <div class="issue-date">発行：<span data-field="issueDate">　</span></div>
+                    </div>
+                    <div class="employee-section">
+                        <div class="employee-name" data-field="employeeName">　</div>
+                        <div class="employee-details">
+                            <div class="detail-item"><span class="label">対象期間：</span><span data-field="workPeriod">　</span></div>
+                            <div class="detail-item"><span class="label">労働日数：</span><span data-field="workDays">　</span></div>
+                            <div class="detail-item"><span class="label">労働時間：</span><span data-field="workHours">　</span></div>
+                            <div class="detail-item"><span class="label">時間外：</span><span data-field="overtimeHours">　</span></div>
+                        </div>
+                    </div>
+                    <div class="three-column">
+                        <div class="column-box">
+                            <div class="column-header">支給</div>
+                            <div class="column-content">
+                                <div class="item-line"><span>基本給</span><span data-field="basicSalary">¥〇</span></div>
+                                <div class="item-line"><span>通勤費</span><span data-field="commutingAllowance">¥〇</span></div>
+                                <div class="item-line total"><span>合計</span><span data-field="totalPayment">¥〇</span></div>
+                            </div>
+                        </div>
+                        <div class="column-box">
+                            <div class="column-header">控除</div>
+                            <div class="column-content">
+                                <div class="item-line"><span>所得税</span><span data-field="incomeTax">¥〇</span></div>
+                                <div class="item-line"><span>住民税</span><span data-field="residentTax">¥〇</span></div>
+                                <div class="item-line"><span>健康保険</span><span data-field="healthInsurance">¥〇</span></div>
+                                <div class="item-line"><span>厚生年金</span><span data-field="pensionInsurance">¥〇</span></div>
+                                <div class="item-line"><span>雇用保険</span><span data-field="employmentInsurance">¥〇</span></div>
+                                <div class="item-line total"><span>合計</span><span data-field="totalDeduction">¥〇</span></div>
+                            </div>
+                        </div>
+                        <div class="column-box">
+                            <div class="column-header">差引支給額</div>
+                            <div class="column-content">
+                                <div class="item-line"><span>支給額</span><span data-field="totalPayment2">¥〇</span></div>
+                                <div class="item-line"><span>控除額</span><span data-field="totalDeduction2">¥〇</span></div>
+                                <div class="item-line total"><span>手取額</span><span data-field="netPayment">¥〇</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="summary-box">
+                        <div class="company-name"><input type="text" class="company-preview" placeholder="会社名" readonly></div>
+                        <div class="summary-line final">
+                            <span>差引支給額</span>
+                            <span data-field="netPayment2">¥〇</span>
+                        </div>
+                    </div>
+                `,
+                6: `
+                    <div class="document-frame">
+                        <div class="title-section">
+                            <h1>給　与　明　細　書</h1>
+                            <div class="company-name"><input type="text" class="company-preview" placeholder="会社名" readonly></div>
+                        </div>
+                        <div class="meta-info">
+                            <div>支給年月：<span data-field="issueDate">　</span></div>
+                            <div>労働期間：<span data-field="workPeriod">　</span></div>
+                        </div>
+                        <div class="employee-box">
+                            <div class="employee-label">氏名</div>
+                            <div class="employee-name-large" data-field="employeeName">　</div>
+                        </div>
+                        <div class="dual-column">
+                            <div class="data-box">
+                                <div class="data-box-title">支給明細</div>
+                                <div class="data-box-content">
+                                    <div class="data-row"><span class="label">労働日数</span><span class="value" data-field="workDays">　</span></div>
+                                    <div class="data-row"><span class="label">労働時間</span><span class="value" data-field="workHours">　</span></div>
+                                    <div class="data-row"><span class="label">時間外労働</span><span class="value" data-field="overtimeHours">　</span></div>
+                                    <div class="data-row"><span class="label">基本給</span><span class="value" data-field="basicSalary">¥〇</span></div>
+                                    <div class="data-row"><span class="label">通勤費</span><span class="value" data-field="commutingAllowance">¥〇</span></div>
+                                    <div class="data-row highlight"><span class="label">支給額合計</span><span class="value" data-field="totalPayment">¥〇</span></div>
+                                </div>
+                            </div>
+                            <div class="data-box">
+                                <div class="data-box-title">控除明細</div>
+                                <div class="data-box-content">
+                                    <div class="data-row"><span class="label">所得税</span><span class="value" data-field="incomeTax">¥〇</span></div>
+                                    <div class="data-row"><span class="label">住民税</span><span class="value" data-field="residentTax">¥〇</span></div>
+                                    <div class="data-row"><span class="label">健康保険</span><span class="value" data-field="healthInsurance">¥〇</span></div>
+                                    <div class="data-row"><span class="label">厚生年金</span><span class="value" data-field="pensionInsurance">¥〇</span></div>
+                                    <div class="data-row"><span class="label">雇用保険</span><span class="value" data-field="employmentInsurance">¥〇</span></div>
+                                    <div class="data-row highlight"><span class="label">控除額合計</span><span class="value" data-field="totalDeduction">¥〇</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grand-total">
+                            <div class="label">差引支給額（手取額）</div>
+                            <div class="amount" data-field="netPayment">¥〇</div>
+                        </div>
+                    </div>
+                `
+            };
+            return templates[format] || '';
+        }
+
+        /**
+         * ドロップダウンの初期化
+         */
+        function initializeSelects() {
+            const yearSelects = ['issueYear', 'startYear', 'endYear'];
+            yearSelects.forEach(id => {
+                const select = document.getElementById(id);
+                for (let year = 2022; year <= 2030; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year + '年';
+                    select.appendChild(option);
+                }
+            });
+
+            const monthSelects = ['issueMonth', 'startMonth', 'endMonth'];
+            monthSelects.forEach(id => {
+                const select = document.getElementById(id);
+                for (let month = 1; month <= 12; month++) {
+                    const option = document.createElement('option');
+                    option.value = month;
+                    option.textContent = month + '月';
+                    select.appendChild(option);
+                }
+            });
+
+            const daySelects = ['startDay', 'endDay'];
+            daySelects.forEach(id => {
+                const select = document.getElementById(id);
+                for (let day = 1; day <= 31; day++) {
+                    const option = document.createElement('option');
+                    option.value = day;
+                    option.textContent = day + '日';
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        /**
+         * イベントリスナーの設定
+         */
+        function attachEventListeners() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            });
+
+            document.getElementById('companyName').addEventListener('input', function() {
+                document.querySelectorAll('.company-preview').forEach(el => {
+                    el.value = this.value;
+                });
+            });
+        }
+
+        /**
+         * 金額をフォーマット
+         */
+        function formatCurrency(value) {
+            const num = parseFloat(value) || 0;
+            return '¥' + num.toLocaleString('ja-JP');
+        }
+
+        /**
+         * プレビューの更新
+         */
+        function updatePreview() {
+            // 会社名
+            const companyName = document.getElementById('companyName').value;
+            document.querySelectorAll('.company-preview').forEach(el => {
+                el.value = companyName;
+            });
+
+            // データ収集
+            const data = {
+                issueDate: getIssueDate(),
+                employeeName: document.getElementById('employeeName').value || '　',
+                workPeriod: getWorkPeriod(),
+                workDays: getWorkDays(),
+                workHours: getWorkHours(),
+                overtimeHours: getOvertimeHours(),
+                basicSalary: formatCurrency(document.getElementById('basicSalary').value),
+                commutingAllowance: formatCurrency(document.getElementById('commutingAllowance').value),
+                totalPayment: formatCurrency(calculateTotalPayment()),
+                totalPayment2: formatCurrency(calculateTotalPayment()),
+                incomeTax: formatCurrency(document.getElementById('incomeTax').value),
+                residentTax: formatCurrency(document.getElementById('residentTax').value),
+                healthInsurance: formatCurrency(document.getElementById('healthInsurance').value),
+                pensionInsurance: formatCurrency(document.getElementById('pensionInsurance').value),
+                employmentInsurance: formatCurrency(document.getElementById('employmentInsurance').value),
+                totalDeduction: formatCurrency(calculateTotalDeduction()),
+                totalDeduction2: formatCurrency(calculateTotalDeduction()),
+                netPayment: formatCurrency(calculateNetPayment()),
+                netPayment2: formatCurrency(calculateNetPayment())
+            };
+
+            // フォーマット1の更新
+            updateFormat1(data);
+
+            // data-field属性を持つ全要素の更新
+            document.querySelectorAll('[data-field]').forEach(el => {
+                const field = el.getAttribute('data-field');
+                if (data[field] !== undefined) {
+                    el.textContent = data[field];
+                }
+            });
+        }
+
+        function updateFormat1(data) {
+            const fields = [
+                'issueDate', 'employeeName', 'workPeriod', 'workDays', 'workHours', 'overtimeHours',
+                'basicSalary', 'commutingAllowance', 'totalPayment',
+                'incomeTax', 'residentTax', 'healthInsurance', 'pensionInsurance', 'employmentInsurance',
+                'totalDeduction', 'netPayment'
+            ];
+            
+            fields.forEach(field => {
+                const el = document.getElementById(`preview1${field.charAt(0).toUpperCase() + field.slice(1)}`);
+                if (el && data[field] !== undefined) {
+                    el.textContent = data[field];
+                }
+            });
+        }
+
+        function getIssueDate() {
+            const year = document.getElementById('issueYear').value;
+            const month = document.getElementById('issueMonth').value;
+            return year && month ? `${year}年${month}月` : '　';
+        }
+
+        function getWorkPeriod() {
+            const sy = document.getElementById('startYear').value;
+            const sm = document.getElementById('startMonth').value;
+            const sd = document.getElementById('startDay').value;
+            const ey = document.getElementById('endYear').value;
+            const em = document.getElementById('endMonth').value;
+            const ed = document.getElementById('endDay').value;
+            return (sy && sm && sd && ey && em && ed) ? `${sy}/${sm}/${sd} ～ ${ey}/${em}/${ed}` : '　';
+        }
+
+        function getWorkDays() {
+            const days = document.getElementById('workDays').value;
+            return days ? `${days} 日` : '　';
+        }
+
+        function getWorkHours() {
+            const hours = document.getElementById('workHours').value;
+            return hours ? `${parseFloat(hours).toFixed(1)} 時間` : '　';
+        }
+
+        function getOvertimeHours() {
+            const hours = document.getElementById('overtimeHours').value;
+            return hours ? `${parseFloat(hours).toFixed(1)} 時間` : '　';
+        }
+
+        function calculateTotalPayment() {
+            const basic = parseFloat(document.getElementById('basicSalary').value) || 0;
+            const commuting = parseFloat(document.getElementById('commutingAllowance').value) || 0;
+            return basic + commuting;
+        }
+
+        function calculateTotalDeduction() {
+            const income = parseFloat(document.getElementById('incomeTax').value) || 0;
+            const resident = parseFloat(document.getElementById('residentTax').value) || 0;
+            const health = parseFloat(document.getElementById('healthInsurance').value) || 0;
+            const pension = parseFloat(document.getElementById('pensionInsurance').value) || 0;
+            const employment = parseFloat(document.getElementById('employmentInsurance').value) || 0;
+            return income + resident + health + pension + employment;
+        }
+
+        function calculateNetPayment() {
+            return calculateTotalPayment() - calculateTotalDeduction();
+        }
+
+        /**
+         * データの保存
+         */
+        function saveData() {
+            const data = {
+                template: currentTemplate,
+                companyName: document.getElementById('companyName').value,
+                issueYear: document.getElementById('issueYear').value,
+                issueMonth: document.getElementById('issueMonth').value,
+                employeeName: document.getElementById('employeeName').value,
+                startYear: document.getElementById('startYear').value,
+                startMonth: document.getElementById('startMonth').value,
+                startDay: document.getElementById('startDay').value,
+                endYear: document.getElementById('endYear').value,
+                endMonth: document.getElementById('endMonth').value,
+                endDay: document.getElementById('endDay').value,
+                workDays: document.getElementById('workDays').value,
+                workHours: document.getElementById('workHours').value,
+                overtimeHours: document.getElementById('overtimeHours').value,
+                basicSalary: document.getElementById('basicSalary').value,
+                commutingAllowance: document.getElementById('commutingAllowance').value,
+                incomeTax: document.getElementById('incomeTax').value,
+                residentTax: document.getElementById('residentTax').value,
+                healthInsurance: document.getElementById('healthInsurance').value,
+                pensionInsurance: document.getElementById('pensionInsurance').value,
+                employmentInsurance: document.getElementById('employmentInsurance').value
+            };
+
+            localStorage.setItem('salarySlipData', JSON.stringify(data));
+            showNotification('データを保存しました');
+        }
+
+        /**
+         * データの読み込み
+         */
+        function loadData() {
+            const savedData = localStorage.getItem('salarySlipData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                if (data.template) {
+                    selectTemplate(data.template);
+                }
+                
+                Object.keys(data).forEach(key => {
+                    if (key === 'template') return;
+                    const element = document.getElementById(key);
+                    if (element && data[key]) {
+                        element.value = data[key];
+                    }
+                });
+
+                updatePreview();
+            }
+        }
+
+        /**
+         * フォームのクリア
+         */
+        function clearForm() {
+            if (confirm('全ての入力内容をクリアしますか？')) {
+                const inputs = document.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.tagName === 'SELECT') {
+                        input.selectedIndex = 0;
+                    } else if (!input.classList.contains('company-preview')) {
+                        input.value = '';
+                    }
+                });
+
+                selectTemplate(1);
+                localStorage.removeItem('salarySlipData');
+                updatePreview();
+                showNotification('データをクリアしました');
+            }
+        }
+
+        /**
+         * PDF出力
+         */
+        function printPDF() {
+            saveData();
+            window.print();
+        }
+
+        /**
+         * 通知の表示
+         */
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

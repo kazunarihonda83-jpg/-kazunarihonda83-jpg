@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与明細書作成ツール v2.0（30フォーマット対応）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "MS Mincho", "游明朝", "Yu Mincho", "Hiragino Mincho ProN", serif !important;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .form-section h1 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 26px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        /* フォーマット選択エリア */
+        .format-selector-area {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .format-selector-area h2 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .format-item {
+            padding: 8px 4px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            font-size: 10px;
+        }
+
+        .format-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .format-item.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* 色選択エリア */
+        .color-selector-area {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .color-selector-area h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+        }
+
+        .color-item {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .color-item:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .color-item.active {
+            border: 3px solid #000;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
+        }
+
+        /* 月タブ */
+        .month-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .month-tab {
+            flex: 1;
+            min-width: 70px;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+
+        .month-tab:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .month-tab.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .month-tab.filled {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .month-tab.filled.active {
+            background: #28a745;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .form-group h2 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-pdf {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-pdf:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #7f8c8d;
+        }
+
+        .preview-section {
+            background: white;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 20px;
+            overflow: auto;
+            max-height: calc(100vh - 40px);
+        }
+
+        .salary-slip {
+            width: 297mm;
+            min-height: 210mm;
+            padding: 15mm;
+            background: white;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* 共通スタイル */
+        .slip-header {
+            text-align: center;
+            margin-bottom: 8mm;
+        }
+
+        .slip-header h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 3mm;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color, #333);
+            padding: 2mm;
+            font-size: 9pt;
+        }
+
+        th {
+            background: var(--header-bg, #e8e8e8);
+            font-weight: bold;
+            text-align: center;
+        }
+
+        td {
+            text-align: right;
+        }
+
+        td.label {
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .total-row {
+            background: var(--total-bg, #f0f0f0);
+            font-weight: bold;
+        }
+
+        /* 30種類のフォーマット定義 */
+        /* フォーマット1-6: 既存のベーススタイル */
+        .format-1 table { border: 2px solid var(--primary-color, #000); }
+        .format-1 th { background: var(--header-bg, #e0e0e0); }
+        .format-1 .total-row { background: var(--total-bg, #d0d0d0); }
+
+        .format-2 table { border: 3px double var(--primary-color, #000); }
+        .format-2 th { background: var(--header-bg, #ddd); border-bottom: 2px solid var(--primary-color, #000); }
+        
+        .format-3 table { border-radius: 4px; overflow: hidden; }
+        .format-3 th { background: var(--header-bg, #ccc); }
+        .format-3 td { border-left: none; border-right: none; }
+
+        .format-4 .slip-header { border-bottom: 4px solid var(--primary-color, #000); }
+        .format-4 table { border: none; }
+        .format-4 td, .format-4 th { border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+
+        .format-5 table { border: 1px solid var(--primary-color, #666); }
+        .format-5 th { background: var(--header-bg, #f5f5f5); font-size: 10pt; }
+        .format-5 .total-row { border-top: 3px solid var(--primary-color, #000); }
+
+        .format-6 .slip-header h1 { border: 3px solid var(--primary-color, #000); padding: 3mm; }
+        .format-6 table { border: 2px solid var(--primary-color, #000); }
+        
+        /* フォーマット7-12: グリッドスタイル */
+        .format-7 table { border: 3px solid var(--primary-color, #000); }
+        .format-7 th, .format-7 td { border: 2px solid var(--primary-color, #666); }
+        .format-7 th { background: var(--header-bg, #e8e8e8); padding: 3mm; }
+
+        .format-8 .salary-slip { border: 5px double var(--primary-color, #000); padding: 10mm; }
+        .format-8 table { border: none; }
+        .format-8 th { background: var(--header-bg, #f0f0f0); border-bottom: 2px solid var(--primary-color, #000); }
+
+        .format-9 .slip-header { background: var(--header-bg, #f8f8f8); padding: 5mm; margin-bottom: 5mm; }
+        .format-9 table { border-left: 4px solid var(--primary-color, #000); border-right: 4px solid var(--primary-color, #000); }
+
+        .format-10 th { background: var(--primary-color, #333); color: white; }
+        .format-10 .total-row { background: var(--primary-color, #555); color: white; }
+        .format-10 table { border: 2px solid var(--primary-color, #000); }
+
+        .format-11 table { border: none; }
+        .format-11 th { border: none; border-bottom: 3px solid var(--primary-color, #000); background: white; }
+        .format-11 td { border: none; border-bottom: 1px solid #ddd; }
+        .format-11 .total-row { border-top: 3px solid var(--primary-color, #000); border-bottom: 3px solid var(--primary-color, #000); }
+
+        .format-12 .slip-header h1 { background: var(--header-bg, #f0f0f0); padding: 4mm; border-left: 5px solid var(--primary-color, #000); }
+        .format-12 table { border: 2px solid var(--primary-color, #333); }
+        .format-12 th { background: var(--header-bg, #e8e8e8); }
+
+        /* フォーマット13-18: モダンスタイル */
+        .format-13 table { border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .format-13 th { background: var(--primary-color, #4a5568); color: white; padding: 3mm; }
+        .format-13 td { border-color: #e2e8f0; }
+
+        .format-14 .slip-header { border: 3px solid var(--primary-color, #000); padding: 5mm; margin-bottom: 5mm; }
+        .format-14 table { border: 2px solid var(--primary-color, #000); }
+        .format-14 th { background: var(--header-bg, #eee); border: 2px solid var(--primary-color, #000); }
+
+        .format-15 table { border-top: 4px solid var(--primary-color, #000); border-bottom: 4px solid var(--primary-color, #000); }
+        .format-15 th { background: var(--header-bg, #f5f5f5); border: none; border-bottom: 2px solid var(--primary-color, #000); }
+        .format-15 td { border-left: none; border-right: none; }
+
+        .format-16 .salary-slip { background: var(--bg-color, #fafafa); }
+        .format-16 table { background: white; border: 1px solid var(--primary-color, #ddd); }
+        .format-16 th { background: var(--header-bg, #f0f0f0); }
+
+        .format-17 .slip-header h1 { text-align: left; border-bottom: 4px solid var(--primary-color, #000); padding-bottom: 3mm; }
+        .format-17 table { border: 3px solid var(--primary-color, #000); }
+        .format-17 th { background: var(--header-bg, #e0e0e0); text-align: left; }
+
+        .format-18 table { border: 2px solid var(--primary-color, #000); }
+        .format-18 th { background: var(--primary-color, #2d3748); color: white; font-size: 10pt; }
+        .format-18 .total-row { background: var(--header-bg, #e8e8e8); font-size: 11pt; }
+
+        /* フォーマット19-24: 伝統的スタイル */
+        .format-19 .salary-slip { border: 8px double var(--primary-color, #000); }
+        .format-19 .slip-header h1 { border-top: 2px solid var(--primary-color, #000); border-bottom: 2px solid var(--primary-color, #000); padding: 3mm 0; }
+        .format-19 table { border: 2px solid var(--primary-color, #000); }
+
+        .format-20 table { border: 3px solid var(--primary-color, #000); }
+        .format-20 th, .format-20 td { border: 1px solid var(--primary-color, #666); }
+        .format-20 th { background: var(--header-bg, #d8d8d8); font-size: 11pt; padding: 3mm; }
+        .format-20 .total-row { background: var(--total-bg, #c8c8c8); font-size: 11pt; }
+
+        .format-21 .slip-header { background: var(--header-bg, #f0f0f0); border: 2px solid var(--primary-color, #000); padding: 5mm; }
+        .format-21 table { border: 2px solid var(--primary-color, #000); margin-top: 5mm; }
+        .format-21 th { background: var(--header-bg, #e8e8e8); }
+
+        .format-22 table { border-collapse: separate; border-spacing: 2px; border: 3px solid var(--primary-color, #000); }
+        .format-22 th { background: var(--header-bg, #ddd); border: 1px solid var(--primary-color, #000); }
+        .format-22 td { background: white; border: 1px solid #999; }
+
+        .format-23 .slip-header h1 { background: var(--primary-color, #333); color: white; padding: 4mm; margin-bottom: 5mm; }
+        .format-23 table { border: 2px solid var(--primary-color, #333); }
+        .format-23 th { background: var(--header-bg, #e8e8e8); border-bottom: 2px solid var(--primary-color, #333); }
+
+        .format-24 table { border-top: 5px solid var(--primary-color, #000); border-bottom: 5px solid var(--primary-color, #000); }
+        .format-24 th { background: var(--header-bg, #f5f5f5); border: none; padding: 3mm; font-size: 10pt; }
+        .format-24 td { border-left: none; border-right: none; border-bottom: 1px solid #ccc; }
+
+        /* フォーマット25-30: 特殊スタイル */
+        .format-25 .salary-slip { background: linear-gradient(to bottom, var(--bg-color, #fafafa) 0%, white 100%); }
+        .format-25 table { border: 2px solid var(--primary-color, #000); box-shadow: 2px 2px 8px rgba(0,0,0,0.1); }
+        .format-25 th { background: var(--primary-color, #444); color: white; }
+
+        .format-26 .slip-header { border-left: 8px solid var(--primary-color, #000); padding-left: 5mm; margin-bottom: 5mm; }
+        .format-26 table { border: 2px solid var(--primary-color, #000); }
+        .format-26 th { background: var(--header-bg, #e8e8e8); border-right: 2px solid var(--primary-color, #000); }
+
+        .format-27 table { border: 4px solid var(--primary-color, #000); border-radius: 4px; overflow: hidden; }
+        .format-27 th { background: var(--header-bg, #d8d8d8); padding: 3mm; font-size: 11pt; }
+        .format-27 .total-row { background: var(--total-bg, #c0c0c0); border-top: 3px solid var(--primary-color, #000); }
+
+        .format-28 .salary-slip { border-left: 6px solid var(--primary-color, #000); border-right: 6px solid var(--primary-color, #000); }
+        .format-28 .slip-header h1 { border: 2px solid var(--primary-color, #000); padding: 3mm; }
+        .format-28 table { border: 2px solid var(--primary-color, #000); }
+
+        .format-29 table { border: 3px double var(--primary-color, #000); }
+        .format-29 th { background: var(--header-bg, #e0e0e0); border: 1px solid var(--primary-color, #000); font-size: 10pt; }
+        .format-29 td { border: 1px solid #999; }
+        .format-29 .total-row { background: var(--total-bg, #d0d0d0); border: 2px solid var(--primary-color, #000); }
+
+        .format-30 .slip-header { text-align: left; border-bottom: 5px solid var(--primary-color, #000); padding-bottom: 4mm; }
+        .format-30 .slip-header h1 { font-size: 24pt; }
+        .format-30 table { border: 3px solid var(--primary-color, #000); margin-top: 5mm; }
+        .format-30 th { background: var(--primary-color, #333); color: white; font-size: 11pt; padding: 3mm; }
+        .format-30 .total-row { background: var(--header-bg, #e8e8e8); font-size: 11pt; border-top: 3px solid var(--primary-color, #000); }
+
+        /* 印刷用スタイル */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                display: block;
+                max-width: none;
+            }
+
+            .form-section {
+                display: none;
+            }
+
+            .preview-section {
+                box-shadow: none;
+                border-radius: 0;
+                max-height: none;
+            }
+
+            .salary-slip {
+                width: 297mm;
+                height: 210mm;
+                padding: 15mm;
+                margin: 0;
+                page-break-after: always;
+            }
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-section {
+                position: relative;
+                top: 0;
+            }
+
+            .salary-slip {
+                width: 100%;
+                min-height: auto;
+                padding: 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 入力フォーム -->
+        <div class="form-section">
+            <h1>📊 給与明細作成ツール v2.0</h1>
+
+            <!-- フォーマット選択 -->
+            <div class="format-selector-area">
+                <h2>🎨 フォーマット選択（30種類）</h2>
+                <div class="format-grid" id="formatGrid"></div>
+
+                <!-- 色選択 -->
+                <div class="color-selector-area">
+                    <h3>配色テーマ</h3>
+                    <div class="color-grid" id="colorGrid"></div>
+                </div>
+            </div>
+
+            <!-- 月選択タブ -->
+            <div class="month-tabs" id="monthTabs"></div>
+
+            <!-- 基本情報 -->
+            <div class="form-group">
+                <h2>基本情報</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>発行年月</label>
+                        <input type="text" id="issueDate" value="2024年1月">
+                    </div>
+                    <div class="input-field">
+                        <label>社員名</label>
+                        <input type="text" id="employeeName" value="山田 太郎">
+                    </div>
+                </div>
+                <div class="input-field">
+                    <label>会社名</label>
+                    <input type="text" id="companyName" value="株式会社サンプル">
+                </div>
+            </div>
+
+            <!-- 勤怠情報 -->
+            <div class="form-group">
+                <h2>勤怠情報</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>労働日数</label>
+                        <input type="number" id="workDays" value="20">
+                    </div>
+                    <div class="input-field">
+                        <label>労働時間</label>
+                        <input type="number" id="workHours" value="160">
+                    </div>
+                    <div class="input-field">
+                        <label>残業時間</label>
+                        <input type="number" id="overtimeHours" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 支給 -->
+            <div class="form-group">
+                <h2>支給項目</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>基本給</label>
+                        <input type="number" id="baseSalary" value="250000">
+                    </div>
+                    <div class="input-field">
+                        <label>通勤手当</label>
+                        <input type="number" id="commuteAllowance" value="10000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 控除 -->
+            <div class="form-group">
+                <h2>控除項目</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>所得税</label>
+                        <input type="number" id="incomeTax" value="8000">
+                    </div>
+                    <div class="input-field">
+                        <label>住民税</label>
+                        <input type="number" id="residentTax" value="12000">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>健康保険</label>
+                        <input type="number" id="healthInsurance" value="15000">
+                    </div>
+                    <div class="input-field">
+                        <label>厚生年金</label>
+                        <input type="number" id="pension" value="25000">
+                    </div>
+                    <div class="input-field">
+                        <label>雇用保険</label>
+                        <input type="number" id="employmentInsurance" value="1000">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ボタン -->
+            <div class="button-group">
+                <button class="btn-pdf" onclick="printSlip()">🖨️ PDF出力</button>
+                <button class="btn-clear" onclick="clearData()">🗑️ クリア</button>
+            </div>
+        </div>
+
+        <!-- プレビュー -->
+        <div class="preview-section">
+            <div id="salarySlip" class="salary-slip"></div>
+        </div>
+    </div>
+
+    <script>
+        // 30種類のフォーマット定義
+        const formats = [
+            { id: 1, name: 'スタンダード', desc: '標準的な表形式' },
+            { id: 2, name: 'ダブルライン', desc: '二重線枠' },
+            { id: 3, name: 'ラウンド', desc: '角丸デザイン' },
+            { id: 4, name: 'ミニマル', desc: 'シンプル線' },
+            { id: 5, name: 'クラシック', desc: '伝統的様式' },
+            { id: 6, name: 'ボックス', desc: '枠囲み強調' },
+            { id: 7, name: 'グリッド', desc: '格子状レイアウト' },
+            { id: 8, name: 'ダブルボーダー', desc: '二重外枠' },
+            { id: 9, name: 'ヘッダー強調', desc: 'ヘッダー背景付' },
+            { id: 10, name: 'ダーク', desc: '暗色ヘッダー' },
+            { id: 11, name: 'ボーダーレス', desc: '枠線最小限' },
+            { id: 12, name: 'サイドライン', desc: '左線アクセント' },
+            { id: 13, name: 'モダン', desc: '現代的デザイン' },
+            { id: 14, name: 'ボールド枠', desc: '太枠強調' },
+            { id: 15, name: 'トップボトム', desc: '上下線のみ' },
+            { id: 16, name: 'グレー背景', desc: '背景色付き' },
+            { id: 17, name: '左揃え', desc: '左寄せレイアウト' },
+            { id: 18, name: 'コントラスト', desc: '高コントラスト' },
+            { id: 19, name: '額縁', desc: '装飾的外枠' },
+            { id: 20, name: 'セル強調', desc: 'セル枠明確' },
+            { id: 21, name: 'ボックスヘッダー', desc: '囲みヘッダー' },
+            { id: 22, name: 'セパレート', desc: 'セル分離' },
+            { id: 23, name: 'バナー', desc: 'バナーヘッダー' },
+            { id: 24, name: 'ライン強調', desc: '水平線強調' },
+            { id: 25, name: 'グラデーション', desc: 'グラデ背景' },
+            { id: 26, name: 'レフトアクセント', desc: '左アクセント線' },
+            { id: 27, name: 'ラウンドボックス', desc: '角丸太枠' },
+            { id: 28, name: 'サイドフレーム', desc: '左右フレーム' },
+            { id: 29, name: 'ダブルグリッド', desc: '二重格子' },
+            { id: 30, name: 'プレミアム', desc: '高級感デザイン' }
+        ];
+
+        // 16色のカラーテーマ
+        const colorThemes = [
+            { name: 'ブラック', primary: '#000000', header: '#e0e0e0', total: '#d0d0d0', bg: '#ffffff' },
+            { name: 'ネイビー', primary: '#1a365d', header: '#e8eaf6', total: '#c5cae9', bg: '#f5f7fa' },
+            { name: 'グレー', primary: '#4a5568', header: '#e2e8f0', total: '#cbd5e0', bg: '#f7fafc' },
+            { name: 'ダークグレー', primary: '#2d3748', header: '#e2e8f0', total: '#cbd5e0', bg: '#ffffff' },
+            { name: 'チャコール', primary: '#1a202c', header: '#edf2f7', total: '#e2e8f0', bg: '#ffffff' },
+            { name: 'スレート', primary: '#334155', header: '#e2e8f0', total: '#cbd5e0', bg: '#f8fafc' },
+            { name: 'ブラウン', primary: '#4a3520', header: '#f5f3f0', total: '#e8e4df', bg: '#fafaf8' },
+            { name: 'ダークブラウン', primary: '#3d2817', header: '#f0ebe5', total: '#e0d5cc', bg: '#faf7f4' },
+            { name: 'オリーブ', primary: '#3f4a2f', header: '#f0f2eb', total: '#e3e7db', bg: '#f8f9f5' },
+            { name: 'フォレスト', primary: '#2d4a3e', header: '#ecf2ef', total: '#d9e7e0', bg: '#f5f9f7' },
+            { name: 'ミッドナイト', primary: '#1e3a5f', header: '#e9ecf3', total: '#d3dae7', bg: '#f4f6fa' },
+            { name: 'インディゴ', primary: '#2c3e7a', header: '#eaecf5', total: '#d5dae9', bg: '#f5f6fa' },
+            { name: 'パープル', primary: '#4a2c5a', header: '#f2ecf5', total: '#e5d9e9', bg: '#f9f5fa' },
+            { name: 'ワイン', primary: '#5a2c3e', header: '#f5ecef', total: '#e9d9e0', bg: '#faf5f7' },
+            { name: 'マルーン', primary: '#4a1f2c', header: '#f3e9ec', total: '#e6d4da', bg: '#f9f4f6' },
+            { name: 'エボニー', primary: '#0f0f0f', header: '#e8e8e8', total: '#d8d8d8', bg: '#ffffff' }
+        ];
+
+        let currentMonth = 0;
+        let currentFormat = 1;
+        let currentColorIndex = 0;
+        let monthData = Array(6).fill(null).map(() => ({
+            issueDate: '', employeeName: '', companyName: '',
+            workDays: '', workHours: '', overtimeHours: '',
+            baseSalary: '', commuteAllowance: '',
+            incomeTax: '', residentTax: '', healthInsurance: '', pension: '', employmentInsurance: ''
+        }));
+
+        // 初期化
+        function init() {
+            renderFormatGrid();
+            renderColorGrid();
+            renderMonthTabs();
+            loadFromLocalStorage();
+            updatePreview();
+        }
+
+        // フォーマットグリッド描画
+        function renderFormatGrid() {
+            const grid = document.getElementById('formatGrid');
+            grid.innerHTML = formats.map(f => `
+                <div class="format-item ${f.id === currentFormat ? 'active' : ''}" 
+                     onclick="selectFormat(${f.id})"
+                     title="${f.desc}">
+                    ${f.id}
+                </div>
+            `).join('');
+        }
+
+        // カラーグリッド描画
+        function renderColorGrid() {
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = colorThemes.map((theme, idx) => `
+                <div class="color-item ${idx === currentColorIndex ? 'active' : ''}" 
+                     onclick="selectColor(${idx})"
+                     style="background: ${theme.primary}"
+                     title="${theme.name}">
+                </div>
+            `).join('');
+        }
+
+        // 月タブ描画
+        function renderMonthTabs() {
+            const tabs = document.getElementById('monthTabs');
+            const months = ['1月', '2月', '3月', '4月', '5月', '6月'];
+            tabs.innerHTML = months.map((month, idx) => {
+                const filled = isMonthFilled(idx);
+                return `
+                    <div class="month-tab ${idx === currentMonth ? 'active' : ''} ${filled ? 'filled' : ''}"
+                         onclick="selectMonth(${idx})">
+                        ${month}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // フォーマット選択
+        function selectFormat(formatId) {
+            currentFormat = formatId;
+            renderFormatGrid();
+            updatePreview();
+            saveToLocalStorage();
+        }
+
+        // 色選択
+        function selectColor(colorIndex) {
+            currentColorIndex = colorIndex;
+            renderColorGrid();
+            updatePreview();
+            saveToLocalStorage();
+        }
+
+        // 月選択
+        function selectMonth(monthIndex) {
+            saveCurrentMonthData();
+            currentMonth = monthIndex;
+            loadCurrentMonthData();
+            renderMonthTabs();
+            updatePreview();
+        }
+
+        // 月データが入力済みかチェック
+        function isMonthFilled(monthIndex) {
+            const data = monthData[monthIndex];
+            return data.baseSalary !== '' || data.employeeName !== '';
+        }
+
+        // 現在の月データを保存
+        function saveCurrentMonthData() {
+            monthData[currentMonth] = {
+                issueDate: document.getElementById('issueDate').value,
+                employeeName: document.getElementById('employeeName').value,
+                companyName: document.getElementById('companyName').value,
+                workDays: document.getElementById('workDays').value,
+                workHours: document.getElementById('workHours').value,
+                overtimeHours: document.getElementById('overtimeHours').value,
+                baseSalary: document.getElementById('baseSalary').value,
+                commuteAllowance: document.getElementById('commuteAllowance').value,
+                incomeTax: document.getElementById('incomeTax').value,
+                residentTax: document.getElementById('residentTax').value,
+                healthInsurance: document.getElementById('healthInsurance').value,
+                pension: document.getElementById('pension').value,
+                employmentInsurance: document.getElementById('employmentInsurance').value
+            };
+        }
+
+        // 現在の月データを読み込み
+        function loadCurrentMonthData() {
+            const data = monthData[currentMonth];
+            document.getElementById('issueDate').value = data.issueDate;
+            document.getElementById('employeeName').value = data.employeeName;
+            document.getElementById('companyName').value = data.companyName;
+            document.getElementById('workDays').value = data.workDays;
+            document.getElementById('workHours').value = data.workHours;
+            document.getElementById('overtimeHours').value = data.overtimeHours;
+            document.getElementById('baseSalary').value = data.baseSalary;
+            document.getElementById('commuteAllowance').value = data.commuteAllowance;
+            document.getElementById('incomeTax').value = data.incomeTax;
+            document.getElementById('residentTax').value = data.residentTax;
+            document.getElementById('healthInsurance').value = data.healthInsurance;
+            document.getElementById('pension').value = data.pension;
+            document.getElementById('employmentInsurance').value = data.employmentInsurance;
+        }
+
+        // プレビュー更新
+        function updatePreview() {
+            saveCurrentMonthData();
+            const slip = document.getElementById('salarySlip');
+            const theme = colorThemes[currentColorIndex];
+            
+            // CSS変数設定
+            slip.style.setProperty('--primary-color', theme.primary);
+            slip.style.setProperty('--header-bg', theme.header);
+            slip.style.setProperty('--total-bg', theme.total);
+            slip.style.setProperty('--bg-color', theme.bg);
+            slip.style.setProperty('--border-color', theme.primary);
+
+            // フォーマットクラス設定
+            slip.className = `salary-slip format-${currentFormat}`;
+
+            // 6ヶ月分のHTML生成
+            let html = `
+                <div class="slip-header">
+                    <h1>給与明細書（6ヶ月分）</h1>
+                    <div style="font-size: 11pt; margin-top: 3mm;">
+                        ${monthData[0].companyName || '株式会社サンプル'}
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">項目</th>
+            `;
+
+            // 月のヘッダー
+            for (let i = 0; i < 6; i++) {
+                const data = monthData[i];
+                html += `<th style="width: 14%;">${data.issueDate || `${i+1}月`}</th>`;
+            }
+            html += `</tr></thead><tbody>`;
+
+            // 氏名行
+            html += `<tr><td class="label">氏名</td>`;
+            for (let i = 0; i < 6; i++) {
+                html += `<td style="text-align: center;">${monthData[i].employeeName || '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            // 勤怠情報
+            html += `<tr><td class="label">労働日数</td>`;
+            for (let i = 0; i < 6; i++) {
+                html += `<td>${monthData[i].workDays || '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `<tr><td class="label">労働時間</td>`;
+            for (let i = 0; i < 6; i++) {
+                html += `<td>${monthData[i].workHours || '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `<tr><td class="label">残業時間</td>`;
+            for (let i = 0; i < 6; i++) {
+                html += `<td>${monthData[i].overtimeHours || '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            // 支給項目
+            html += `<tr><td class="label">基本給</td>`;
+            for (let i = 0; i < 6; i++) {
+                const val = monthData[i].baseSalary;
+                html += `<td>${val ? formatNumber(val) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `<tr><td class="label">通勤手当</td>`;
+            for (let i = 0; i < 6; i++) {
+                const val = monthData[i].commuteAllowance;
+                html += `<td>${val ? formatNumber(val) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            // 支給合計
+            html += `<tr class="total-row"><td class="label">支給合計</td>`;
+            for (let i = 0; i < 6; i++) {
+                const total = calcTotal(monthData[i], 'payment');
+                html += `<td>${total > 0 ? formatNumber(total) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            // 控除項目
+            html += `<tr><td class="label">所得税</td>`;
+            for (let i = 0; i < 6; i++) {
+                const val = monthData[i].incomeTax;
+                html += `<td>${val ? formatNumber(val) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `<tr><td class="label">住民税</td>`;
+            for (let i = 0; i < 6; i++) {
+                const val = monthData[i].residentTax;
+                html += `<td>${val ? formatNumber(val) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `<tr><td class="label">健康保険</td>`;
+            for (let i = 0; i < 6; i++) {
+                const val = monthData[i].healthInsurance;
+                html += `<td>${val ? formatNumber(val) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `<tr><td class="label">厚生年金</td>`;
+            for (let i = 0; i < 6; i++) {
+                const val = monthData[i].pension;
+                html += `<td>${val ? formatNumber(val) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `<tr><td class="label">雇用保険</td>`;
+            for (let i = 0; i < 6; i++) {
+                const val = monthData[i].employmentInsurance;
+                html += `<td>${val ? formatNumber(val) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            // 控除合計
+            html += `<tr class="total-row"><td class="label">控除合計</td>`;
+            for (let i = 0; i < 6; i++) {
+                const total = calcTotal(monthData[i], 'deduction');
+                html += `<td>${total > 0 ? formatNumber(total) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            // 差引支給額
+            html += `<tr class="total-row" style="font-size: 11pt;"><td class="label">差引支給額</td>`;
+            for (let i = 0; i < 6; i++) {
+                const payment = calcTotal(monthData[i], 'payment');
+                const deduction = calcTotal(monthData[i], 'deduction');
+                const net = payment - deduction;
+                html += `<td>${net > 0 ? formatNumber(net) : '-'}</td>`;
+            }
+            html += `</tr>`;
+
+            html += `</tbody></table>`;
+
+            slip.innerHTML = html;
+            saveToLocalStorage();
+        }
+
+        // 合計計算
+        function calcTotal(data, type) {
+            if (type === 'payment') {
+                return (parseInt(data.baseSalary) || 0) + (parseInt(data.commuteAllowance) || 0);
+            } else {
+                return (parseInt(data.incomeTax) || 0) + 
+                       (parseInt(data.residentTax) || 0) + 
+                       (parseInt(data.healthInsurance) || 0) + 
+                       (parseInt(data.pension) || 0) + 
+                       (parseInt(data.employmentInsurance) || 0);
+            }
+        }
+
+        // 数値フォーマット
+        function formatNumber(num) {
+            return parseInt(num).toLocaleString() + '円';
+        }
+
+        // PDF出力
+        function printSlip() {
+            saveCurrentMonthData();
+            saveToLocalStorage();
+            window.print();
+        }
+
+        // データクリア
+        function clearData() {
+            if (confirm('現在の月のデータをクリアしますか？')) {
+                monthData[currentMonth] = {
+                    issueDate: '', employeeName: '', companyName: '',
+                    workDays: '', workHours: '', overtimeHours: '',
+                    baseSalary: '', commuteAllowance: '',
+                    incomeTax: '', residentTax: '', healthInsurance: '', pension: '', employmentInsurance: ''
+                };
+                loadCurrentMonthData();
+                renderMonthTabs();
+                updatePreview();
+            }
+        }
+
+        // localStorage保存
+        function saveToLocalStorage() {
+            localStorage.setItem('salarySlipData_v2', JSON.stringify({
+                monthData: monthData,
+                currentMonth: currentMonth,
+                currentFormat: currentFormat,
+                currentColorIndex: currentColorIndex
+            }));
+        }
+
+        // localStorage読み込み
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('salarySlipData_v2');
+            if (saved) {
+                const data = JSON.parse(saved);
+                monthData = data.monthData || monthData;
+                currentMonth = data.currentMonth || 0;
+                currentFormat = data.currentFormat || 1;
+                currentColorIndex = data.currentColorIndex || 0;
+                loadCurrentMonthData();
+                renderFormatGrid();
+                renderColorGrid();
+                renderMonthTabs();
+            }
+        }
+
+        // 入力イベント
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+            
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', updatePreview);
+            });
+        });
+    </script>
+</body>
+</html>

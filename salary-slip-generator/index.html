@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与明細書作成ツール（6ヶ月対応）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "MS Mincho", "游明朝", "Yu Mincho", "Hiragino Mincho ProN", serif !important;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .form-section h1 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 28px;
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .template-option {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .template-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .template-option.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .template-option .template-name {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .template-option .template-desc {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .template-option.active .template-desc {
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .form-group h2 {
+            color: #667eea;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .month-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .month-tab {
+            flex: 1;
+            min-width: 80px;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .month-tab:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .month-tab.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .month-tab.filled {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .month-tab.filled.active {
+            background: #28a745;
+            color: white;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        label .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-pdf {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-pdf:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .btn-save {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        .preview-section {
+            background: white;
+            padding: 0;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 20px;
+            overflow: auto;
+            max-height: calc(100vh - 40px);
+        }
+
+        .salary-slip {
+            width: 297mm;
+            min-height: 210mm;
+            padding: 15mm;
+            background: white;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* 6ヶ月フォーマット7: 横並び表形式 */
+        .format-7 .slip-header {
+            text-align: center;
+            margin-bottom: 5mm;
+            padding-bottom: 3mm;
+            border-bottom: 3px solid #000;
+        }
+
+        .format-7 .slip-header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 8px;
+            margin-bottom: 2mm;
+        }
+
+        .format-7 .period-info {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 3mm;
+        }
+
+        .format-7 .six-month-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #000;
+        }
+
+        .format-7 .six-month-table th {
+            background: #e0e0e0;
+            border: 1px solid #000;
+            padding: 1.5mm;
+            font-size: 9pt;
+            text-align: center;
+        }
+
+        .format-7 .six-month-table td {
+            border: 1px solid #666;
+            padding: 1.5mm;
+            font-size: 8pt;
+            text-align: right;
+        }
+
+        .format-7 .six-month-table td.label {
+            text-align: left;
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .format-7 .six-month-table tr.category {
+            background: #d0d0d0;
+            font-weight: bold;
+        }
+
+        .format-7 .six-month-table tr.total {
+            background: #e8e8e8;
+            font-weight: bold;
+            border-top: 2px solid #000;
+        }
+
+        /* 6ヶ月フォーマット8: カード型6分割 */
+        .format-8 .slip-header {
+            text-align: center;
+            margin-bottom: 5mm;
+            padding: 3mm;
+            border: 3px double #000;
+        }
+
+        .format-8 .slip-header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 6px;
+        }
+
+        .format-8 .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3mm;
+        }
+
+        .format-8 .month-card {
+            border: 2px solid #000;
+            padding: 2mm;
+        }
+
+        .format-8 .month-card-header {
+            background: #000;
+            color: white;
+            padding: 2mm;
+            text-align: center;
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+        }
+
+        .format-8 .month-card-body {
+            font-size: 8pt;
+        }
+
+        .format-8 .card-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1mm 0;
+            border-bottom: 1px dotted #999;
+        }
+
+        .format-8 .card-row.total {
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            font-weight: bold;
+            margin-top: 1mm;
+            padding-top: 1.5mm;
+        }
+
+        .format-8 .card-row.final {
+            background: #f0f0f0;
+            padding: 1.5mm;
+            font-size: 9pt;
+            font-weight: bold;
+        }
+
+        /* 6ヶ月フォーマット9: 縦長リスト */
+        .format-9 .slip-header {
+            border-left: 8px solid #000;
+            padding-left: 5mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-9 .slip-header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 5px;
+        }
+
+        .format-9 .month-section {
+            border: 2px solid #000;
+            margin-bottom: 3mm;
+            page-break-inside: avoid;
+        }
+
+        .format-9 .month-header {
+            background: #000;
+            color: white;
+            padding: 2mm 3mm;
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        .format-9 .month-content {
+            padding: 2mm;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2mm;
+            font-size: 8pt;
+        }
+
+        .format-9 .content-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1mm;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .format-9 .content-item.highlight {
+            background: #f5f5f5;
+            font-weight: bold;
+            border: 1px solid #000;
+        }
+
+        /* 6ヶ月フォーマット10: グラフ風 */
+        .format-10 .slip-header {
+            text-align: center;
+            background: #f0f0f0;
+            padding: 3mm;
+            border: 2px solid #000;
+            margin-bottom: 5mm;
+        }
+
+        .format-10 .slip-header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 8px;
+        }
+
+        .format-10 .chart-section {
+            margin-bottom: 5mm;
+        }
+
+        .format-10 .chart-title {
+            background: #d0d0d0;
+            padding: 2mm;
+            font-size: 11pt;
+            font-weight: bold;
+            border: 2px solid #000;
+        }
+
+        .format-10 .chart-grid {
+            display: grid;
+            grid-template-columns: 20% repeat(6, 1fr);
+            border: 2px solid #000;
+            border-top: none;
+        }
+
+        .format-10 .chart-grid > div {
+            border: 1px solid #999;
+            padding: 2mm 1mm;
+            font-size: 8pt;
+            text-align: center;
+        }
+
+        .format-10 .chart-grid .row-label {
+            background: #f5f5f5;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 2mm;
+        }
+
+        .format-10 .chart-grid .header-cell {
+            background: #e8e8e8;
+            font-weight: bold;
+        }
+
+        .format-10 .chart-grid .total-cell {
+            background: #e0e0e0;
+            font-weight: bold;
+        }
+
+        /* 6ヶ月フォーマット11: 帳簿型 */
+        .format-11 .document-frame {
+            border: 4px double #000;
+            padding: 5mm;
+        }
+
+        .format-11 .title-bar {
+            text-align: center;
+            background: #000;
+            color: white;
+            padding: 3mm;
+            margin-bottom: 5mm;
+        }
+
+        .format-11 .title-bar h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            letter-spacing: 10px;
+        }
+
+        .format-11 .ledger-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #000;
+        }
+
+        .format-11 .ledger-table th {
+            background: #d0d0d0;
+            border: 1px solid #000;
+            padding: 2mm;
+            font-size: 9pt;
+            text-align: center;
+        }
+
+        .format-11 .ledger-table td {
+            border: 1px solid #666;
+            padding: 2mm 1mm;
+            font-size: 8pt;
+            text-align: right;
+        }
+
+        .format-11 .ledger-table td.month-col {
+            background: #f8f8f8;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .format-11 .ledger-table tr.summary-row {
+            background: #e8e8e8;
+            font-weight: bold;
+            border-top: 2px solid #000;
+        }
+
+        .format-11 .ledger-table tr.final-row {
+            background: #d0d0d0;
+            font-weight: bold;
+            font-size: 9pt;
+            border-top: 3px solid #000;
+        }
+
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .salary-slip {
+                transform: scale(0.7);
+                transform-origin: top center;
+            }
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+
+            body {
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+
+            .container {
+                display: block;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .form-section, .button-group, .notification {
+                display: none !important;
+            }
+
+            .preview-section {
+                box-shadow: none;
+                border-radius: 0;
+                position: static;
+                margin: 0;
+                padding: 0;
+            }
+
+            .salary-slip {
+                width: 297mm;
+                min-height: 210mm;
+                padding: 15mm;
+                margin: 0;
+                transform: none !important;
+            }
+
+            * {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification">データを保存しました</div>
+
+    <div class="container">
+        <div class="form-section">
+            <h1>給与明細書作成ツール（6ヶ月対応）</h1>
+
+            <div class="form-group">
+                <h2>フォーマット選択</h2>
+                <div class="template-selector">
+                    <div class="template-option active" data-template="7" onclick="selectTemplate(7)">
+                        <div class="template-name">横並び表</div>
+                        <div class="template-desc">6ヶ月横並び</div>
+                    </div>
+                    <div class="template-option" data-template="8" onclick="selectTemplate(8)">
+                        <div class="template-name">カード型</div>
+                        <div class="template-desc">6分割カード</div>
+                    </div>
+                    <div class="template-option" data-template="9" onclick="selectTemplate(9)">
+                        <div class="template-name">縦長リスト</div>
+                        <div class="template-desc">縦積み表示</div>
+                    </div>
+                    <div class="template-option" data-template="10" onclick="selectTemplate(10)">
+                        <div class="template-name">グラフ風</div>
+                        <div class="template-desc">比較表示</div>
+                    </div>
+                    <div class="template-option" data-template="11" onclick="selectTemplate(11)">
+                        <div class="template-name">帳簿型</div>
+                        <div class="template-desc">台帳形式</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <h2>基本情報</h2>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>会社名</label>
+                        <input type="text" id="companyName" placeholder="株式会社〇〇">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>氏名</label>
+                        <input type="text" id="employeeName" placeholder="山田 太郎">
+                    </div>
+                </div>
+                <div class="input-row">
+                    <div class="input-field">
+                        <label>開始年</label>
+                        <select id="startYear"></select>
+                    </div>
+                    <div class="input-field">
+                        <label>開始月</label>
+                        <select id="startMonth"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <h2>月別データ入力</h2>
+                <div class="month-tabs" id="monthTabs"></div>
+                
+                <div id="monthDataForm">
+                    <div class="input-row">
+                        <div class="input-field">
+                            <label>労働日数</label>
+                            <input type="number" id="workDays" min="0" step="1" placeholder="20">
+                        </div>
+                        <div class="input-field">
+                            <label>労働時間</label>
+                            <input type="number" id="workHours" min="0" step="0.5" placeholder="160.0">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-field">
+                            <label>基本給</label>
+                            <input type="number" id="basicSalary" min="0" step="1000" placeholder="300000">
+                        </div>
+                        <div class="input-field">
+                            <label>通勤費</label>
+                            <input type="number" id="commutingAllowance" min="0" step="1000" placeholder="10000">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-field">
+                            <label>所得税</label>
+                            <input type="number" id="incomeTax" min="0" step="100" placeholder="15000">
+                        </div>
+                        <div class="input-field">
+                            <label>住民税</label>
+                            <input type="number" id="residentTax" min="0" step="100" placeholder="20000">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-field">
+                            <label>健康保険</label>
+                            <input type="number" id="healthInsurance" min="0" step="100" placeholder="15000">
+                        </div>
+                        <div class="input-field">
+                            <label>厚生年金</label>
+                            <input type="number" id="pensionInsurance" min="0" step="100" placeholder="27000">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-field">
+                            <label>雇用保険</label>
+                            <input type="number" id="employmentInsurance" min="0" step="100" placeholder="1500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-save" onclick="saveData()">💾 保存</button>
+                <button class="btn-pdf" onclick="printPDF()">📄 PDF出力</button>
+                <button class="btn-clear" onclick="clearForm()">🗑️ クリア</button>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <div class="salary-slip format-7" id="salarySlip"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentTemplate = 7;
+        let currentMonth = 0;
+        let monthsData = Array(6).fill(null).map(() => ({}));
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSelects();
+            initializeMonthTabs();
+            loadData();
+            attachEventListeners();
+            renderTemplate(7);
+        });
+
+        function initializeSelects() {
+            const startYear = document.getElementById('startYear');
+            const startMonth = document.getElementById('startMonth');
+            
+            for (let year = 2022; year <= 2030; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + '年';
+                startYear.appendChild(option);
+            }
+            
+            for (let month = 1; month <= 12; month++) {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month + '月';
+                startMonth.appendChild(option);
+            }
+
+            startYear.value = new Date().getFullYear();
+            startMonth.value = new Date().getMonth() + 1;
+        }
+
+        function initializeMonthTabs() {
+            const container = document.getElementById('monthTabs');
+            for (let i = 0; i < 6; i++) {
+                const tab = document.createElement('div');
+                tab.className = 'month-tab' + (i === 0 ? ' active' : '');
+                tab.textContent = `${i + 1}ヶ月目`;
+                tab.onclick = () => selectMonth(i);
+                container.appendChild(tab);
+            }
+        }
+
+        function selectMonth(index) {
+            saveCurrentMonthData();
+            currentMonth = index;
+            
+            document.querySelectorAll('.month-tab').forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+            });
+            
+            loadMonthData(index);
+        }
+
+        function saveCurrentMonthData() {
+            monthsData[currentMonth] = {
+                workDays: document.getElementById('workDays').value,
+                workHours: document.getElementById('workHours').value,
+                basicSalary: document.getElementById('basicSalary').value,
+                commutingAllowance: document.getElementById('commutingAllowance').value,
+                incomeTax: document.getElementById('incomeTax').value,
+                residentTax: document.getElementById('residentTax').value,
+                healthInsurance: document.getElementById('healthInsurance').value,
+                pensionInsurance: document.getElementById('pensionInsurance').value,
+                employmentInsurance: document.getElementById('employmentInsurance').value
+            };
+
+            updateMonthTabStatus();
+            updatePreview();
+        }
+
+        function loadMonthData(index) {
+            const data = monthsData[index];
+            document.getElementById('workDays').value = data.workDays || '';
+            document.getElementById('workHours').value = data.workHours || '';
+            document.getElementById('basicSalary').value = data.basicSalary || '';
+            document.getElementById('commutingAllowance').value = data.commutingAllowance || '';
+            document.getElementById('incomeTax').value = data.incomeTax || '';
+            document.getElementById('residentTax').value = data.residentTax || '';
+            document.getElementById('healthInsurance').value = data.healthInsurance || '';
+            document.getElementById('pensionInsurance').value = data.pensionInsurance || '';
+            document.getElementById('employmentInsurance').value = data.employmentInsurance || '';
+        }
+
+        function updateMonthTabStatus() {
+            document.querySelectorAll('.month-tab').forEach((tab, i) => {
+                const hasData = monthsData[i].basicSalary || monthsData[i].workDays;
+                tab.classList.toggle('filled', hasData);
+            });
+        }
+
+        function selectTemplate(templateNumber) {
+            saveCurrentMonthData();
+            currentTemplate = templateNumber;
+            
+            document.querySelectorAll('.template-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            document.querySelector(`[data-template="${templateNumber}"]`).classList.add('active');
+            
+            renderTemplate(templateNumber);
+            updatePreview();
+        }
+
+        function renderTemplate(templateNumber) {
+            const salarySlip = document.getElementById('salarySlip');
+            salarySlip.className = `salary-slip format-${templateNumber}`;
+            salarySlip.innerHTML = getTemplateHTML(templateNumber);
+            updatePreview();
+        }
+
+        function getTemplateHTML(format) {
+            const companyName = document.getElementById('companyName').value || '会社名';
+            const employeeName = document.getElementById('employeeName').value || '氏名';
+            const startYear = document.getElementById('startYear').value;
+            const startMonth = parseInt(document.getElementById('startMonth').value) || 1;
+
+            if (format === 7) {
+                return generateFormat7HTML(companyName, employeeName, startYear, startMonth);
+            } else if (format === 8) {
+                return generateFormat8HTML(companyName, employeeName, startYear, startMonth);
+            } else if (format === 9) {
+                return generateFormat9HTML(companyName, employeeName, startYear, startMonth);
+            } else if (format === 10) {
+                return generateFormat10HTML(companyName, employeeName, startYear, startMonth);
+            } else if (format === 11) {
+                return generateFormat11HTML(companyName, employeeName, startYear, startMonth);
+            }
+        }
+
+        function generateFormat7HTML(company, name, year, month) {
+            const months = [];
+            for (let i = 0; i < 6; i++) {
+                const m = (parseInt(month) + i - 1) % 12 + 1;
+                months.push(`${m}月`);
+            }
+
+            return `
+                <div class="slip-header">
+                    <h1>給与明細書（6ヶ月分）</h1>
+                    <div style="font-size:12pt;">${company}</div>
+                    <div class="period-info">${name} 様　　対象期間：${year}年${month}月～</div>
+                </div>
+                <table class="six-month-table">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            ${months.map(m => `<th>${m}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="category"><td colspan="7">勤怠</td></tr>
+                        <tr><td class="label">労働日数</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="workDays">-</td>`).join('')}</tr>
+                        <tr><td class="label">労働時間</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="workHours">-</td>`).join('')}</tr>
+                        <tr class="category"><td colspan="7">支給</td></tr>
+                        <tr><td class="label">基本給</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="basicSalary">-</td>`).join('')}</tr>
+                        <tr><td class="label">通勤費</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="commutingAllowance">-</td>`).join('')}</tr>
+                        <tr class="total"><td class="label">支給計</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="totalPayment">-</td>`).join('')}</tr>
+                        <tr class="category"><td colspan="7">控除</td></tr>
+                        <tr><td class="label">所得税</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="incomeTax">-</td>`).join('')}</tr>
+                        <tr><td class="label">住民税</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="residentTax">-</td>`).join('')}</tr>
+                        <tr><td class="label">健康保険</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="healthInsurance">-</td>`).join('')}</tr>
+                        <tr><td class="label">厚生年金</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="pensionInsurance">-</td>`).join('')}</tr>
+                        <tr><td class="label">雇用保険</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="employmentInsurance">-</td>`).join('')}</tr>
+                        <tr class="total"><td class="label">控除計</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="totalDeduction">-</td>`).join('')}</tr>
+                        <tr class="total" style="background:#d0d0d0;"><td class="label">差引支給額</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="netPayment">-</td>`).join('')}</tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function generateFormat8HTML(company, name, year, month) {
+            let html = `
+                <div class="slip-header">
+                    <h1>給与明細書（6ヶ月分）</h1>
+                    <div style="font-size:11pt;margin-top:2mm;">${company}　${name} 様</div>
+                </div>
+                <div class="cards-grid">
+            `;
+
+            for (let i = 0; i < 6; i++) {
+                const m = (parseInt(month) + i - 1) % 12 + 1;
+                html += `
+                    <div class="month-card">
+                        <div class="month-card-header">${year}年${m}月分</div>
+                        <div class="month-card-body">
+                            <div class="card-row"><span>労働日数</span><span data-month="${i}" data-field="workDays">-</span></div>
+                            <div class="card-row"><span>労働時間</span><span data-month="${i}" data-field="workHours">-</span></div>
+                            <div class="card-row"><span>基本給</span><span data-month="${i}" data-field="basicSalary">-</span></div>
+                            <div class="card-row"><span>通勤費</span><span data-month="${i}" data-field="commutingAllowance">-</span></div>
+                            <div class="card-row total"><span>支給計</span><span data-month="${i}" data-field="totalPayment">-</span></div>
+                            <div class="card-row"><span>所得税</span><span data-month="${i}" data-field="incomeTax">-</span></div>
+                            <div class="card-row"><span>住民税</span><span data-month="${i}" data-field="residentTax">-</span></div>
+                            <div class="card-row"><span>社会保険</span><span data-month="${i}" data-field="socialInsurance">-</span></div>
+                            <div class="card-row total"><span>控除計</span><span data-month="${i}" data-field="totalDeduction">-</span></div>
+                            <div class="card-row final"><span>手取額</span><span data-month="${i}" data-field="netPayment">-</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function generateFormat9HTML(company, name, year, month) {
+            let html = `
+                <div class="slip-header">
+                    <h1>給与明細書（6ヶ月分）</h1>
+                    <div style="font-size:11pt;margin-top:2mm;">${company}　${name} 様</div>
+                </div>
+            `;
+
+            for (let i = 0; i < 6; i++) {
+                const m = (parseInt(month) + i - 1) % 12 + 1;
+                html += `
+                    <div class="month-section">
+                        <div class="month-header">${year}年${m}月分</div>
+                        <div class="month-content">
+                            <div class="content-item"><span>労働日数</span><span data-month="${i}" data-field="workDays">-</span></div>
+                            <div class="content-item"><span>労働時間</span><span data-month="${i}" data-field="workHours">-</span></div>
+                            <div class="content-item"><span>基本給</span><span data-month="${i}" data-field="basicSalary">-</span></div>
+                            <div class="content-item"><span>通勤費</span><span data-month="${i}" data-field="commutingAllowance">-</span></div>
+                            <div class="content-item highlight"><span>支給計</span><span data-month="${i}" data-field="totalPayment">-</span></div>
+                            <div class="content-item"><span>所得税</span><span data-month="${i}" data-field="incomeTax">-</span></div>
+                            <div class="content-item"><span>住民税</span><span data-month="${i}" data-field="residentTax">-</span></div>
+                            <div class="content-item"><span>健康保険</span><span data-month="${i}" data-field="healthInsurance">-</span></div>
+                            <div class="content-item"><span>厚生年金</span><span data-month="${i}" data-field="pensionInsurance">-</span></div>
+                            <div class="content-item"><span>雇用保険</span><span data-month="${i}" data-field="employmentInsurance">-</span></div>
+                            <div class="content-item highlight"><span>控除計</span><span data-month="${i}" data-field="totalDeduction">-</span></div>
+                            <div class="content-item highlight"><span>手取額</span><span data-month="${i}" data-field="netPayment">-</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        function generateFormat10HTML(company, name, year, month) {
+            const months = [];
+            for (let i = 0; i < 6; i++) {
+                const m = (parseInt(month) + i - 1) % 12 + 1;
+                months.push(`${m}月`);
+            }
+
+            return `
+                <div class="slip-header">
+                    <h1>給与明細書（6ヶ月比較）</h1>
+                    <div style="font-size:11pt;margin-top:2mm;">${company}　${name} 様　${year}年</div>
+                </div>
+                <div class="chart-section">
+                    <div class="chart-title">支給・控除・手取額推移</div>
+                    <div class="chart-grid">
+                        <div class="row-label">項目</div>
+                        ${months.map(m => `<div class="header-cell">${m}</div>`).join('')}
+                        <div class="row-label">基本給</div>
+                        ${Array(6).fill(0).map((_, i) => `<div data-month="${i}" data-field="basicSalary">-</div>`).join('')}
+                        <div class="row-label">支給計</div>
+                        ${Array(6).fill(0).map((_, i) => `<div class="total-cell" data-month="${i}" data-field="totalPayment">-</div>`).join('')}
+                        <div class="row-label">控除計</div>
+                        ${Array(6).fill(0).map((_, i) => `<div class="total-cell" data-month="${i}" data-field="totalDeduction">-</div>`).join('')}
+                        <div class="row-label">手取額</div>
+                        ${Array(6).fill(0).map((_, i) => `<div class="total-cell" data-month="${i}" data-field="netPayment">-</div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateFormat11HTML(company, name, year, month) {
+            const months = [];
+            for (let i = 0; i < 6; i++) {
+                const m = (parseInt(month) + i - 1) % 12 + 1;
+                months.push(`${m}月`);
+            }
+
+            return `
+                <div class="document-frame">
+                    <div class="title-bar">
+                        <h1>給与支給台帳（6ヶ月分）</h1>
+                        <div style="font-size:11pt;margin-top:2mm;">${company}</div>
+                    </div>
+                    <div style="text-align:right;margin-bottom:3mm;font-size:11pt;font-weight:bold;">氏名：${name}</div>
+                    <table class="ledger-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2">項目</th>
+                                ${months.map(m => `<th>${m}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">労働日数</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="workDays">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">労働時間</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="workHours">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">基本給</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="basicSalary">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">通勤費</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="commutingAllowance">-</td>`).join('')}</tr>
+                            <tr class="summary-row"><td style="text-align:left;">支給額計</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="totalPayment">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">所得税</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="incomeTax">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">住民税</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="residentTax">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">健康保険</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="healthInsurance">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">厚生年金</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="pensionInsurance">-</td>`).join('')}</tr>
+                            <tr><td style="background:#f0f0f0;font-weight:bold;text-align:left;">雇用保険</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="employmentInsurance">-</td>`).join('')}</tr>
+                            <tr class="summary-row"><td style="text-align:left;">控除額計</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="totalDeduction">-</td>`).join('')}</tr>
+                            <tr class="final-row"><td style="text-align:left;">差引支給額</td>${Array(6).fill(0).map((_, i) => `<td data-month="${i}" data-field="netPayment">-</td>`).join('')}</tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function updatePreview() {
+            for (let i = 0; i < 6; i++) {
+                const data = monthsData[i];
+                const basic = parseFloat(data.basicSalary) || 0;
+                const commuting = parseFloat(data.commutingAllowance) || 0;
+                const income = parseFloat(data.incomeTax) || 0;
+                const resident = parseFloat(data.residentTax) || 0;
+                const health = parseFloat(data.healthInsurance) || 0;
+                const pension = parseFloat(data.pensionInsurance) || 0;
+                const employment = parseFloat(data.employmentInsurance) || 0;
+
+                const totalPayment = basic + commuting;
+                const totalDeduction = income + resident + health + pension + employment;
+                const netPayment = totalPayment - totalDeduction;
+                const socialInsurance = health + pension + employment;
+
+                document.querySelectorAll(`[data-month="${i}"][data-field="workDays"]`).forEach(el => {
+                    el.textContent = data.workDays ? `${data.workDays}日` : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="workHours"]`).forEach(el => {
+                    el.textContent = data.workHours ? `${parseFloat(data.workHours).toFixed(1)}h` : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="basicSalary"]`).forEach(el => {
+                    el.textContent = basic ? formatCurrency(basic) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="commutingAllowance"]`).forEach(el => {
+                    el.textContent = commuting ? formatCurrency(commuting) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="totalPayment"]`).forEach(el => {
+                    el.textContent = totalPayment ? formatCurrency(totalPayment) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="incomeTax"]`).forEach(el => {
+                    el.textContent = income ? formatCurrency(income) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="residentTax"]`).forEach(el => {
+                    el.textContent = resident ? formatCurrency(resident) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="healthInsurance"]`).forEach(el => {
+                    el.textContent = health ? formatCurrency(health) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="pensionInsurance"]`).forEach(el => {
+                    el.textContent = pension ? formatCurrency(pension) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="employmentInsurance"]`).forEach(el => {
+                    el.textContent = employment ? formatCurrency(employment) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="socialInsurance"]`).forEach(el => {
+                    el.textContent = socialInsurance ? formatCurrency(socialInsurance) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="totalDeduction"]`).forEach(el => {
+                    el.textContent = totalDeduction ? formatCurrency(totalDeduction) : '-';
+                });
+                document.querySelectorAll(`[data-month="${i}"][data-field="netPayment"]`).forEach(el => {
+                    el.textContent = netPayment ? formatCurrency(netPayment) : '-';
+                });
+            }
+        }
+
+        function formatCurrency(value) {
+            const num = parseFloat(value) || 0;
+            return '¥' + num.toLocaleString('ja-JP');
+        }
+
+        function attachEventListeners() {
+            const inputs = document.querySelectorAll('#monthDataForm input, #monthDataForm select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    saveCurrentMonthData();
+                });
+            });
+
+            document.getElementById('companyName').addEventListener('input', updatePreview);
+            document.getElementById('employeeName').addEventListener('input', updatePreview);
+            document.getElementById('startYear').addEventListener('change', () => {
+                renderTemplate(currentTemplate);
+            });
+            document.getElementById('startMonth').addEventListener('change', () => {
+                renderTemplate(currentTemplate);
+            });
+        }
+
+        function saveData() {
+            saveCurrentMonthData();
+            const data = {
+                template: currentTemplate,
+                companyName: document.getElementById('companyName').value,
+                employeeName: document.getElementById('employeeName').value,
+                startYear: document.getElementById('startYear').value,
+                startMonth: document.getElementById('startMonth').value,
+                monthsData: monthsData
+            };
+            localStorage.setItem('salarySlip6MonthData', JSON.stringify(data));
+            showNotification('データを保存しました');
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('salarySlip6MonthData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                if (data.template) selectTemplate(data.template);
+                if (data.companyName) document.getElementById('companyName').value = data.companyName;
+                if (data.employeeName) document.getElementById('employeeName').value = data.employeeName;
+                if (data.startYear) document.getElementById('startYear').value = data.startYear;
+                if (data.startMonth) document.getElementById('startMonth').value = data.startMonth;
+                if (data.monthsData) {
+                    monthsData = data.monthsData;
+                    loadMonthData(0);
+                    updateMonthTabStatus();
+                }
+                
+                updatePreview();
+            }
+        }
+
+        function clearForm() {
+            if (confirm('全ての入力内容をクリアしますか？')) {
+                monthsData = Array(6).fill(null).map(() => ({}));
+                document.querySelectorAll('input').forEach(input => input.value = '');
+                currentMonth = 0;
+                selectMonth(0);
+                selectTemplate(7);
+                localStorage.removeItem('salarySlip6MonthData');
+                updatePreview();
+                showNotification('データをクリアしました');
+            }
+        }
+
+        function printPDF() {
+            saveData();
+            window.print();
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

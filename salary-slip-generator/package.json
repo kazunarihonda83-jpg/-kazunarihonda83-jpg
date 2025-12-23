@@ -1,0 +1,17 @@
+{
+  "name": "salary-slip-generator",
+  "version": "3.0.0",
+  "description": "給与明細書作成ツール - 30種類のフォーマット対応",
+  "scripts": {
+    "dev": "python server.py",
+    "build": "echo 'Static build'"
+  },
+  "keywords": [
+    "salary",
+    "payslip",
+    "generator",
+    "japan"
+  ],
+  "author": "",
+  "license": "MIT"
+}

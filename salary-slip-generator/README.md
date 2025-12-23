@@ -1,6 +1,10 @@
 # 給与明細書作成ツール v3.0（30フォーマット対応版）
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kazunarihonda83-jpg/-kazunarihonda83-jpg&project-name=salary-slip-generator&repository-name=salary-slip-generator)
+## 🚀 ワンクリックデプロイ
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kazunarihonda83-jpg/-kazunarihonda83-jpg&project-name=kyuyo-meisai-tool)
+
+**重要**: デプロイ時に必ず `Root Directory` を `salary-slip-generator` に設定してください
 
 ## 🎉 新バージョンの特徴
 

@@ -1,21 +1,11 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "installCommand": null,
   "rewrites": [
     {
       "source": "/",
-      "destination": "/index_6month.html"
+      "destination": "/index.html"
     }
   ]
 }

@@ -422,6 +422,76 @@
             background: #c0392b;
         }
 
+        .btn-small-edit {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-small-edit:hover {
+            background: #e67e22;
+        }
+
+        .btn-small-copy {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .btn-small-copy:hover {
+            background: #8e44ad;
+        }
+
+        /* データ管理ツールバー */
+        .data-toolbar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .sort-select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .data-count {
+            font-size: 14px;
+            color: #666;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .no-data-message p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .no-data-message small {
+            font-size: 13px;
+        }
+
         .input-modal {
             width: 100%;
             padding: 10px;
@@ -565,12 +635,45 @@
     <div id="loadModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>📂 データ読み込み</h2>
+                <h2>📂 データ読み込み・管理</h2>
                 <span class="close" onclick="closeLoadModal()">&times;</span>
             </div>
+            
+            <!-- データ管理ツールバー -->
+            <div class="data-toolbar">
+                <input type="text" id="searchBox" class="search-box" placeholder="🔍 データを検索..." onkeyup="filterDataList()">
+                <select id="sortSelect" class="sort-select" onchange="sortDataList()">
+                    <option value="updated_desc">更新日時（新しい順）</option>
+                    <option value="updated_asc">更新日時（古い順）</option>
+                    <option value="created_desc">作成日時（新しい順）</option>
+                    <option value="created_asc">作成日時（古い順）</option>
+                    <option value="name_asc">名前（A-Z）</option>
+                    <option value="name_desc">名前（Z-A）</option>
+                </select>
+                <div id="dataCount" class="data-count">0件</div>
+            </div>
+            
             <ul id="dataList" class="data-list">
                 <!-- データリストが動的に挿入されます -->
             </ul>
+        </div>
+    </div>
+
+    <!-- データ編集モーダル -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ データ名編集</h2>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <div>
+                <label for="editDataName">データ名</label>
+                <input type="text" id="editDataName" class="input-modal" placeholder="データ名を入力">
+            </div>
+            <div class="button-group">
+                <button class="btn btn-save" onclick="updateDataName()">💾 更新</button>
+                <button class="btn btn-clear" onclick="closeEditModal()">キャンセル</button>
+            </div>
         </div>
     </div>
 
@@ -1606,29 +1709,209 @@
         }
 
         // データリスト描画
+        let allDataList = []; // 全データを保持
+        let currentSortOrder = 'updated_desc';
+
         function renderDataList(dataList) {
+            allDataList = dataList; // グローバルに保存
             const listDiv = document.getElementById('dataList');
+            const countDiv = document.getElementById('dataCount');
+
+            countDiv.textContent = `${dataList.length}件`;
 
             if (dataList.length === 0) {
-                listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">保存されたデータがありません</p>';
+                listDiv.innerHTML = `
+                    <div class="no-data-message">
+                        <p>📂 保存されたデータがありません</p>
+                        <small>「💾 保存」ボタンからデータを保存できます</small>
+                    </div>
+                `;
                 return;
             }
 
             listDiv.innerHTML = dataList.map(item => `
-                <li class="data-item">
+                <li class="data-item" data-name="${item.name.toLowerCase()}">
                     <div class="data-item-info">
-                        <div class="data-item-name">${item.name}</div>
+                        <div class="data-item-name">${escapeHtml(item.name)}</div>
                         <div class="data-item-date">
                             作成: ${new Date(item.created_at).toLocaleString('ja-JP')} |
                             更新: ${new Date(item.updated_at).toLocaleString('ja-JP')}
                         </div>
                     </div>
                     <div class="data-item-actions">
-                        <button class="btn-small btn-small-load" onclick="loadFromServer(${item.id})">読込</button>
-                        <button class="btn-small btn-small-delete" onclick="deleteFromServer(${item.id})">削除</button>
+                        <button class="btn-small btn-small-load" onclick="loadFromServer(${item.id})" title="このデータを読み込む">📂 読込</button>
+                        <button class="btn-small btn-small-edit" onclick="openEditModal(${item.id}, '${escapeHtml(item.name).replace(/'/g, "\\'")}');" title="データ名を編集">✏️ 編集</button>
+                        <button class="btn-small btn-small-copy" onclick="copyData(${item.id})" title="このデータを複製">📋 複製</button>
+                        <button class="btn-small btn-small-delete" onclick="deleteFromServer(${item.id})" title="このデータを削除">🗑️ 削除</button>
                     </div>
                 </li>
             `).join('');
+        }
+
+        // HTMLエスケープ
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // データ検索・フィルタリング
+        function filterDataList() {
+            const searchText = document.getElementById('searchBox').value.toLowerCase();
+            const items = document.querySelectorAll('.data-item');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const name = item.getAttribute('data-name');
+                if (name.includes(searchText)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            document.getElementById('dataCount').textContent = `${visibleCount}/${allDataList.length}件`;
+        }
+
+        // データソート
+        function sortDataList() {
+            const sortValue = document.getElementById('sortSelect').value;
+            currentSortOrder = sortValue;
+
+            const sortedList = [...allDataList].sort((a, b) => {
+                switch(sortValue) {
+                    case 'updated_desc':
+                        return new Date(b.updated_at) - new Date(a.updated_at);
+                    case 'updated_asc':
+                        return new Date(a.updated_at) - new Date(b.updated_at);
+                    case 'created_desc':
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    case 'created_asc':
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    case 'name_asc':
+                        return a.name.localeCompare(b.name, 'ja');
+                    case 'name_desc':
+                        return b.name.localeCompare(a.name, 'ja');
+                    default:
+                        return 0;
+                }
+            });
+
+            renderDataList(sortedList);
+            filterDataList(); // 検索フィルターを再適用
+        }
+
+        // 編集モーダル開く
+        let editingDataId = null;
+        function openEditModal(dataId, dataName) {
+            editingDataId = dataId;
+            document.getElementById('editDataName').value = dataName;
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        // 編集モーダル閉じる
+        function closeEditModal() {
+            editingDataId = null;
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // データ名更新
+        async function updateDataName() {
+            const newName = document.getElementById('editDataName').value.trim();
+
+            if (!newName) {
+                showNotification('データ名を入力してください', 'error');
+                return;
+            }
+
+            try {
+                // データを読み込んで名前だけ変更して保存
+                const loadResponse = await fetch(`${API_BASE}/api/load/${editingDataId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const loadData = await loadResponse.json();
+
+                if (loadResponse.ok && loadData.success) {
+                    const payload = {
+                        data_id: editingDataId,
+                        data_name: newName,
+                        month_data: loadData.month_data,
+                        current_format: loadData.current_format,
+                        current_color_index: loadData.current_color_index
+                    };
+
+                    const saveResponse = await fetch(`${API_BASE}/api/save`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const saveData = await saveResponse.json();
+
+                    if (saveResponse.ok && saveData.success) {
+                        showNotification('データ名を更新しました', 'success');
+                        closeEditModal();
+                        await loadDataList();
+                    } else {
+                        showNotification(saveData.error || '更新に失敗しました', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('更新エラー:', error);
+                showNotification('サーバーに接続できません', 'error');
+            }
+        }
+
+        // データ複製
+        async function copyData(dataId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/load/${dataId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const copyName = `${data.data_name} (コピー)`;
+                    const payload = {
+                        data_name: copyName,
+                        month_data: data.month_data,
+                        current_format: data.current_format,
+                        current_color_index: data.current_color_index
+                    };
+
+                    const saveResponse = await fetch(`${API_BASE}/api/save`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const saveData = await saveResponse.json();
+
+                    if (saveResponse.ok && saveData.success) {
+                        showNotification(`「${copyName}」を作成しました`, 'success');
+                        await loadDataList();
+                    } else {
+                        showNotification(saveData.error || '複製に失敗しました', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('複製エラー:', error);
+                showNotification('サーバーに接続できません', 'error');
+            }
         }
 
         // サーバーから読み込み

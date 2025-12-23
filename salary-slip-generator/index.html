@@ -1537,37 +1537,18 @@
         });
 
         // ===== 認証・データ保存機能 =====
-        const API_BASE = window.location.origin;
+        const API_BASE = null; // LocalStorageモードのため無効
         let currentDataId = null;
-        let authToken = localStorage.getItem('authToken');
-        let username = localStorage.getItem('username');
+        let authToken = null; // LocalStorageモードのため無効
+        let username = "LocalStorageユーザー"; // LocalStorageモード
 
         // 認証チェック
         async function checkAuth() {
+            // LocalStorageモードでは認証不要
             showGuestInfo();
-            return;
-            // 以下サーバー機能は無効化
-            if (authToken) {
-                try {
-                    const response = await fetch(`${API_BASE}/api/verify`, {
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        showUserInfo(data.username);
-                    } else {
-                        showGuestInfo();
-                    }
-                } catch (error) {
-                    console.log('認証確認失敗:', error);
-                    showGuestInfo();
-                }
-            } else {
-                showGuestInfo();
-            }
         }
 
+        
         // ユーザー情報表示
         function showUserInfo(user) {
             const userInfoDiv = document.getElementById('userInfo');
@@ -1645,41 +1626,37 @@
                 return;
             }
 
-            saveCurrentMonthData();
+            // LocalStorageに保存
+            const monthData = {};
+            for (let i = 1; i <= 6; i++) {
+                monthData[i] = getMonthData(i);
+            }
 
             const payload = {
-                data_id: currentDataId,
+                id: Date.now().toString(),
                 data_name: dataName,
                 month_data: monthData,
                 current_format: currentFormat,
-                current_color_index: currentColorIndex
+                current_color_index: currentColorIndex,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
             };
 
-            try {
-                const response = await fetch(`${API_BASE}/api/save`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    currentDataId = data.data_id;
-                    showNotification('データを保存しました', 'success');
-                    closeSaveModal();
-                } else {
-                    showNotification(data.error || '保存に失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('保存エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
-            }
+            // 既存のデータリストを取得
+            let savedDataList = JSON.parse(localStorage.getItem('salaryDataList') || '[]');
+            
+            // 新しいデータを追加
+            savedDataList.push(payload);
+            
+            // LocalStorageに保存
+            localStorage.setItem('salaryDataList', JSON.stringify(savedDataList));
+            
+            currentDataId = payload.id;
+            showNotification('データを保存しました', 'success');
+            closeSaveModal();
         }
 
+        
         // 読み込みモーダル開く
         async function openLoadModal() {
             document.getElementById('loadModal').style.display = 'block';
@@ -1693,24 +1670,14 @@
 
         // データリスト取得
         async function loadDataList() {
-            try {
-                const response = await fetch(`${API_BASE}/api/list`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    renderDataList(data.data_list);
-                } else {
-                    showNotification(data.error || 'データの取得に失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('データリスト取得エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
-            }
+            // LocalStorageから取得
+            const savedDataList = JSON.parse(localStorage.getItem('salaryDataList') || '[]');
+            // 更新日時でソート（新しい順）
+            savedDataList.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+            renderDataList(savedDataList);
         }
 
+        
         // データリスト描画
         let allDataList = []; // 全データを保持
         let currentSortOrder = 'updated_desc';

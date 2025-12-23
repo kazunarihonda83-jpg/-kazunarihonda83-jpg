@@ -254,6 +254,216 @@
             background: #7f8c8d;
         }
 
+        .btn-save {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #229954;
+        }
+
+        .btn-load {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-load:hover {
+            background: #2980b9;
+        }
+
+        .btn-logout {
+            background: #e67e22;
+            color: white;
+        }
+
+        .btn-logout:hover {
+            background: #d35400;
+        }
+
+        /* ログイン状態表示 */
+        .user-info {
+            background: #e8f5e9;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info .username {
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .guest-info {
+            background: #fff3cd;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .data-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .data-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .data-item:hover {
+            border-color: #667eea;
+            background: #f9f9ff;
+        }
+
+        .data-item-info {
+            flex: 1;
+        }
+
+        .data-item-name {
+            font-weight: bold;
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .data-item-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .data-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-small-load {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-small-load:hover {
+            background: #2980b9;
+        }
+
+        .btn-small-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-small-delete:hover {
+            background: #c0392b;
+        }
+
+        .input-modal {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .input-modal:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .notification.success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .notification.info {
+            background: #3498db;
+            color: white;
+        }
+
         .preview-section {
             background: white;
             padding: 0;
@@ -330,9 +540,46 @@
     </style>
 </head>
 <body>
+    <!-- 通知 -->
+    <div id="notification" class="notification"></div>
+
+    <!-- データ保存モーダル -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💾 データ保存</h2>
+                <span class="close" onclick="closeSaveModal()">&times;</span>
+            </div>
+            <div>
+                <label for="dataName">データ名</label>
+                <input type="text" id="dataName" class="input-modal" placeholder="例: 2024年上半期給与データ">
+            </div>
+            <div class="button-group">
+                <button class="btn btn-save" onclick="saveToServer()">💾 保存</button>
+                <button class="btn btn-clear" onclick="closeSaveModal()">キャンセル</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- データ読み込みモーダル -->
+    <div id="loadModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📂 データ読み込み</h2>
+                <span class="close" onclick="closeLoadModal()">&times;</span>
+            </div>
+            <ul id="dataList" class="data-list">
+                <!-- データリストが動的に挿入されます -->
+            </ul>
+        </div>
+    </div>
+
     <div class="container">
         <div class="form-section">
             <h1>📊 給与明細ツール v3.0</h1>
+
+            <!-- ログイン状態表示 -->
+            <div id="userInfo" style="display: none;"></div>
 
             <div class="format-selector-area">
                 <h2>🎨 フォーマット選択（30種類）</h2>
@@ -427,6 +674,17 @@
             <div class="button-group">
                 <button class="btn-pdf" onclick="printSlip()">🖨️ PDF出力</button>
                 <button class="btn-clear" onclick="clearData()">🗑️ クリア</button>
+            </div>
+
+            <!-- ログインユーザー用ボタン -->
+            <div id="authButtons" style="display: none;">
+                <div class="button-group" style="margin-top: 15px;">
+                    <button class="btn-save" onclick="openSaveModal()">💾 保存</button>
+                    <button class="btn-load" onclick="openLoadModal()">📂 読み込み</button>
+                </div>
+                <div class="button-group" style="margin-top: 10px;">
+                    <button class="btn-logout" onclick="logout()">🚪 ログアウト</button>
+                </div>
             </div>
         </div>
 
@@ -1167,12 +1425,269 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             init();
+            checkAuth();
             
             const inputs = document.querySelectorAll('input, select');
             inputs.forEach(input => {
                 input.addEventListener('input', updatePreview);
             });
         });
+
+        // ===== 認証・データ保存機能 =====
+        const API_BASE = window.location.origin;
+        let currentDataId = null;
+        let authToken = localStorage.getItem('authToken');
+        let username = localStorage.getItem('username');
+
+        // 認証チェック
+        async function checkAuth() {
+            if (authToken) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/verify`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        showUserInfo(data.username);
+                    } else {
+                        showGuestInfo();
+                    }
+                } catch (error) {
+                    console.log('認証確認失敗:', error);
+                    showGuestInfo();
+                }
+            } else {
+                showGuestInfo();
+            }
+        }
+
+        // ユーザー情報表示
+        function showUserInfo(user) {
+            const userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = `
+                <div class="user-info">
+                    <span>👤 <span class="username">${user}</span> でログイン中</span>
+                </div>
+            `;
+            userInfoDiv.style.display = 'block';
+            document.getElementById('authButtons').style.display = 'block';
+        }
+
+        // ゲスト情報表示
+        function showGuestInfo() {
+            const userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = `
+                <div class="guest-info">
+                    ⚠️ ゲストモード（データ保存機能は使えません）<br>
+                    <a href="login.html" style="color: #667eea; text-decoration: underline;">ログイン</a>してデータを保存できます
+                </div>
+            `;
+            userInfoDiv.style.display = 'block';
+            document.getElementById('authButtons').style.display = 'none';
+        }
+
+        // 通知表示
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // ログアウト
+        async function logout() {
+            if (confirm('ログアウトしますか？')) {
+                try {
+                    await fetch(`${API_BASE}/api/logout`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                } catch (error) {
+                    console.log('ログアウトエラー:', error);
+                }
+                
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('username');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // 保存モーダル開く
+        function openSaveModal() {
+            saveCurrentMonthData();
+            const defaultName = `給与データ_${new Date().toLocaleDateString('ja-JP').replace(/\//g, '-')}`;
+            document.getElementById('dataName').value = defaultName;
+            document.getElementById('saveModal').style.display = 'block';
+        }
+
+        // 保存モーダル閉じる
+        function closeSaveModal() {
+            document.getElementById('saveModal').style.display = 'none';
+        }
+
+        // サーバーに保存
+        async function saveToServer() {
+            const dataName = document.getElementById('dataName').value.trim();
+            
+            if (!dataName) {
+                showNotification('データ名を入力してください', 'error');
+                return;
+            }
+
+            saveCurrentMonthData();
+
+            const payload = {
+                data_id: currentDataId,
+                data_name: dataName,
+                month_data: monthData,
+                current_format: currentFormat,
+                current_color_index: currentColorIndex
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    currentDataId = data.data_id;
+                    showNotification('データを保存しました', 'success');
+                    closeSaveModal();
+                } else {
+                    showNotification(data.error || '保存に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('保存エラー:', error);
+                showNotification('サーバーに接続できません', 'error');
+            }
+        }
+
+        // 読み込みモーダル開く
+        async function openLoadModal() {
+            document.getElementById('loadModal').style.display = 'block';
+            await loadDataList();
+        }
+
+        // 読み込みモーダル閉じる
+        function closeLoadModal() {
+            document.getElementById('loadModal').style.display = 'none';
+        }
+
+        // データリスト取得
+        async function loadDataList() {
+            try {
+                const response = await fetch(`${API_BASE}/api/list`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    renderDataList(data.data_list);
+                } else {
+                    showNotification(data.error || 'データの取得に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('データリスト取得エラー:', error);
+                showNotification('サーバーに接続できません', 'error');
+            }
+        }
+
+        // データリスト描画
+        function renderDataList(dataList) {
+            const listDiv = document.getElementById('dataList');
+
+            if (dataList.length === 0) {
+                listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">保存されたデータがありません</p>';
+                return;
+            }
+
+            listDiv.innerHTML = dataList.map(item => `
+                <li class="data-item">
+                    <div class="data-item-info">
+                        <div class="data-item-name">${item.name}</div>
+                        <div class="data-item-date">
+                            作成: ${new Date(item.created_at).toLocaleString('ja-JP')} |
+                            更新: ${new Date(item.updated_at).toLocaleString('ja-JP')}
+                        </div>
+                    </div>
+                    <div class="data-item-actions">
+                        <button class="btn-small btn-small-load" onclick="loadFromServer(${item.id})">読込</button>
+                        <button class="btn-small btn-small-delete" onclick="deleteFromServer(${item.id})">削除</button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        // サーバーから読み込み
+        async function loadFromServer(dataId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/load/${dataId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    currentDataId = data.data_id;
+                    monthData = data.month_data;
+                    currentFormat = data.current_format;
+                    currentColorIndex = data.current_color_index;
+
+                    loadCurrentMonthData();
+                    renderFormatGrid();
+                    renderColorGrid();
+                    renderMonthTabs();
+                    updatePreview();
+
+                    showNotification(`「${data.data_name}」を読み込みました`, 'success');
+                    closeLoadModal();
+                } else {
+                    showNotification(data.error || '読み込みに失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('読み込みエラー:', error);
+                showNotification('サーバーに接続できません', 'error');
+            }
+        }
+
+        // サーバーから削除
+        async function deleteFromServer(dataId) {
+            if (!confirm('このデータを削除しますか？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/delete/${dataId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showNotification('データを削除しました', 'success');
+                    await loadDataList();
+                } else {
+                    showNotification(data.error || '削除に失敗しました', 'error');
+                }
+            } catch (error) {
+                console.error('削除エラー:', error);
+                showNotification('サーバーに接続できません', 'error');
+            }
+        }
     </script>
 </body>
 </html>

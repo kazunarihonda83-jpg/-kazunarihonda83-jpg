@@ -14,3 +14,9 @@
 📍 アクセスURL: http://0.0.0.0:8001
  * Debugger is active!
  * Debugger PIN: 122-972-965
+10.64.108.182 - - [23/Dec/2025 17:10:57] "GET /login.html HTTP/1.1" 200 -
+10.64.108.182 - - [23/Dec/2025 17:10:58] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+/home/user/webapp/salary-slip-generator/server.py:149: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+  c.execute('INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)',
+10.64.108.182 - - [23/Dec/2025 17:11:57] "POST /api/register HTTP/1.1" 200 -
+10.64.108.182 - - [23/Dec/2025 17:11:58] "GET /index_6month.html HTTP/1.1" 200 -

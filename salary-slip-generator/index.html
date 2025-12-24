@@ -1536,38 +1536,87 @@
             });
         });
 
-        // ===== 認証・データ保存機能 =====
-        // API_BASE removed - LocalStorage mode
+        // ===== LocalStorageベース認証・データ保存機能 =====
         let currentDataId = null;
-        // authToken removed - LocalStorage mode
-        let username = localStorage.getItem('username');
+        let currentUser = localStorage.getItem('currentUser') || null;
 
-        // 認証チェック（LocalStorageモード）
+        // 認証初期化
         function checkAuth() {
-            // LocalStorageモード - ログイン不要でデータ保存可能
-            const userInfoDiv = document.getElementById('userInfo');
-            userInfoDiv.innerHTML = `
-                <div class="user-info" style="background: #e8f5e9; padding: 10px; border-radius: 5px; text-align: center;">
-                    ✅ <span style="font-weight: bold; color: #2e7d32;">LocalStorageモード</span><br>
-                    <small style="color: #555;">ログイン不要でデータ保存・管理ができます</small>
-                </div>
-            `;
-            userInfoDiv.style.display = 'block';
-            // ログインボタンを非表示
-            const authButtons = document.getElementById('authButtons');
-            if (authButtons) {
-                authButtons.style.display = 'none';
+            currentUser = localStorage.getItem('currentUser');
+            
+            if (currentUser) {
+                showUserInfo(currentUser);
+            } else {
+                showLoginPrompt();
             }
         }
 
-        // ユーザー情報表示（未使用 - LocalStorageモードでは不要）
-        function showUserInfo(user) {
-            // LocalStorageモードでは使用しない
+        // ログインプロンプト表示
+        function showLoginPrompt() {
+            const userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = `
+                <div class="login-prompt" style="background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="margin-bottom: 10px;">
+                        <strong>👤 ユーザー名を入力してログイン</strong>
+                    </div>
+                    <input type="text" id="usernameInput" placeholder="ユーザー名" 
+                           style="padding: 8px; border: 2px solid #ff9800; border-radius: 5px; width: 200px; margin-right: 10px;"
+                           onkeypress="if(event.key==='Enter') loginUser()">
+                    <button onclick="loginUser()" 
+                            style="padding: 8px 20px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        ログイン
+                    </button>
+                    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                        ※ユーザー名は自由に設定できます（ブラウザに保存）
+                    </div>
+                </div>
+            `;
+            userInfoDiv.style.display = 'block';
         }
 
-        // ゲスト情報表示（未使用 - LocalStorageモードでは不要）
-        function showGuestInfo() {
-            // LocalStorageモードでは使用しない
+        // ユーザーログイン
+        function loginUser() {
+            const usernameInput = document.getElementById('usernameInput');
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            
+            if (!username) {
+                showNotification('ユーザー名を入力してください', 'error');
+                return;
+            }
+            
+            localStorage.setItem('currentUser', username);
+            currentUser = username;
+            
+            // ユーザーデータの初期化
+            const userDataKey = `userData_${username}`;
+            if (!localStorage.getItem(userDataKey)) {
+                localStorage.setItem(userDataKey, JSON.stringify([]));
+            }
+            
+            showNotification(`${username} でログインしました`, 'success');
+            showUserInfo(username);
+        }
+
+        // ユーザー情報表示
+        function showUserInfo(username) {
+            const userInfoDiv = document.getElementById('userInfo');
+            const userDataKey = `userData_${username}`;
+            const userData = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            
+            userInfoDiv.innerHTML = `
+                <div class="user-info" style="background: #e3f2fd; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-weight: bold; color: #1976d2;">👤 ${username}</span>
+                        <span style="color: #666; font-size: 12px; margin-left: 10px;">でログイン中</span>
+                        <span style="color: #999; font-size: 11px; margin-left: 10px;">（保存データ: ${userData.length}件）</span>
+                    </div>
+                    <button onclick="logout()" 
+                            style="padding: 6px 15px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                        ログアウト
+                    </button>
+                </div>
+            `;
+            userInfoDiv.style.display = 'block';
         }
 
         // 通知表示
@@ -1584,10 +1633,17 @@
 
         // ログアウト
         function logout() {
-            if (confirm('データをクリアしますか？')) {
-                localStorage.clear();
-                showNotification('データをクリアしました', 'success');
-                location.reload();
+            if (confirm('ログアウトしますか？\n※データは保存されたままです')) {
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                showNotification('ログアウトしました', 'success');
+                showLoginPrompt();
+                
+                // データリストをクリア
+                const listDiv = document.getElementById('dataList');
+                if (listDiv) {
+                    listDiv.innerHTML = '<p style="text-align: center; color: #999;">ログインしてください</p>';
+                }
             }
         }
 
@@ -1604,8 +1660,15 @@
             document.getElementById('saveModal').style.display = 'none';
         }
 
-                // サーバーに保存（LocalStorageモード）
+                // サーバーに保存（ユーザー別LocalStorage）
         async function saveToServer() {
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                showLoginPrompt();
+                return;
+            }
+            
             const dataName = document.getElementById('dataName').value.trim();
             
             if (!dataName) {
@@ -1625,19 +1688,23 @@
                 updated_at: new Date().toISOString()
             };
 
-            // LocalStorageに保存
-            let savedDataList = JSON.parse(localStorage.getItem('salaryDataList') || '[]');
+            // ユーザー別LocalStorageに保存
+            const userDataKey = `userData_${currentUser}`;
+            let savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
             const existingIndex = savedDataList.findIndex(d => d.id === payload.id);
             if (existingIndex >= 0) {
                 savedDataList[existingIndex] = payload;
             } else {
                 savedDataList.push(payload);
             }
-            localStorage.setItem('salaryDataList', JSON.stringify(savedDataList));
+            localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
             
             currentDataId = payload.id;
             showNotification('データを保存しました', 'success');
             closeSaveModal();
+            
+            // ユーザー情報を更新
+            showUserInfo(currentUser);
         }
 
         // 読み込みモーダル開く
@@ -1651,9 +1718,18 @@
             document.getElementById('loadModal').style.display = 'none';
         }
 
-                // データリスト取得（LocalStorageモード）
+                // データリスト取得（ユーザー別LocalStorage）
         async function loadDataList() {
-            const savedDataList = JSON.parse(localStorage.getItem('salaryDataList') || '[]');
+            // ログインチェック
+            if (!currentUser) {
+                const listDiv = document.getElementById('dataList');
+                listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">ログインしてください</p>';
+                document.getElementById('dataCount').textContent = '0件';
+                return;
+            }
+            
+            const userDataKey = `userData_${currentUser}`;
+            const savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
             savedDataList.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
             renderDataList(savedDataList);
         }
@@ -1773,6 +1849,7 @@
 
         // データ名更新
         // データ名更新（LocalStorageモード）
+        // データ名更新（ユーザー別LocalStorage）
         async function updateDataName() {
             const newName = document.getElementById('editDataName').value.trim();
 
@@ -1781,72 +1858,33 @@
                 return;
             }
 
-            // LocalStorageから取得して更新
-            let savedDataList = JSON.parse(localStorage.getItem('salaryDataList') || '[]');
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                return;
+            }
+
+            // ユーザー別LocalStorageから取得して更新
+            const userDataKey = `userData_${currentUser}`;
+            let savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
             const dataIndex = savedDataList.findIndex(d => d.id === editingDataId);
             
             if (dataIndex >= 0) {
                 savedDataList[dataIndex].data_name = newName;
                 savedDataList[dataIndex].updated_at = new Date().toISOString();
-                localStorage.setItem('salaryDataList', JSON.stringify(savedDataList));
+                localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
                 
-                showNotification('データ名を更新しました', 'success');
-                closeEditModal();
-                await loadDataList();
-            } else {
-                showNotification('データが見つかりません', 'error');
-            }
-        }
 
-            if (!newName) {
-                showNotification('データ名を入力してください', 'error');
+        // データ複製（ユーザー別LocalStorage）
+        async function copyData(dataId) {
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
                 return;
             }
-
-            try {
-                // データを読み込んで名前だけ変更して保存
-                const loadResponse = // fetch removed
-
-                const loadData = await loadResponse.json();
-
-                if (loadResponse.ok && loadData.success) {
-                    const payload = {
-                        data_id: editingDataId,
-                        data_name: newName,
-                        month_data: loadData.month_data,
-                        current_format: loadData.current_format,
-                        current_color_index: loadData.current_color_index
-                    };
-
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const saveData = await saveResponse.json();
-
-                    if (saveResponse.ok && saveData.success) {
-                        showNotification('データ名を更新しました', 'success');
-                        closeEditModal();
-                        await loadDataList();
-                    } else {
-                        showNotification(saveData.error || '更新に失敗しました', 'error');
-                    }
-                }
-            } catch (error) {
-                console.error('更新エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
-            }
-        }
-
-        // データ複製
-        // データ複製（LocalStorageモード）
-        async function copyData(dataId) {
-            // LocalStorageから取得
-            const savedDataList = JSON.parse(localStorage.getItem('salaryDataList') || '[]');
+            
+            const userDataKey = `userData_${currentUser}`;
+            const savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
             const data = savedDataList.find(d => d.id === dataId);
             
             if (!data) {
@@ -1866,64 +1904,69 @@
             };
 
             savedDataList.push(newData);
-            localStorage.setItem('salaryDataList', JSON.stringify(savedDataList));
+            localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
             
             showNotification(`「${copyName}」を作成しました`, 'success');
             await loadDataList();
-        }
+            
+            // ユーザー情報を更新
+            showUserInfo(currentUser);
         }
 
         // サーバーから読み込み
         async function loadFromServer(dataId) {
-            try {
-                const response = // fetch removed
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    currentDataId = data.data_id;
-                    monthData = data.month_data;
-                    currentFormat = data.current_format;
-                    currentColorIndex = data.current_color_index;
-
-                    loadCurrentMonthData();
-                    renderFormatGrid();
-                    renderColorGrid();
-                    renderMonthTabs();
-                    updatePreview();
-
-                    showNotification(`「${data.data_name}」を読み込みました`, 'success');
-                    closeLoadModal();
-                } else {
-                    showNotification(data.error || '読み込みに失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('読み込みエラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                return;
             }
+            
+            const userDataKey = `userData_${currentUser}`;
+            const savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            const data = savedDataList.find(d => d.id === dataId);
+            
+            if (!data) {
+                showNotification('データが見つかりません', 'error');
+                return;
+            }
+
+            currentDataId = data.id;
+            monthData = data.month_data;
+            currentFormat = data.current_format;
+            currentColorIndex = data.current_color_index;
+
+            loadCurrentMonthData();
+            renderFormatGrid();
+            renderColorGrid();
+            renderMonthTabs();
+            updatePreview();
+
+            showNotification(`「${data.data_name}」を読み込みました`, 'success');
+            closeLoadModal();
         }
 
-        // サーバーから削除
+        // サーバーから削除（ユーザー別LocalStorage）
         async function deleteFromServer(dataId) {
             if (!confirm('このデータを削除しますか？')) {
                 return;
             }
 
-            try {
-                const response = // fetch removed
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    showNotification('データを削除しました', 'success');
-                    await loadDataList();
-                } else {
-                    showNotification(data.error || '削除に失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('削除エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                return;
             }
+
+            const userDataKey = `userData_${currentUser}`;
+            let savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            savedDataList = savedDataList.filter(d => d.id !== dataId);
+            localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
+
+            showNotification('データを削除しました', 'success');
+            await loadDataList();
+            
+            // ユーザー情報を更新
+            showUserInfo(currentUser);
         }
     </script>
 </body>

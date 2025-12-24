@@ -1536,58 +1536,87 @@
             });
         });
 
-        // ===== 認証・データ保存機能 =====
-        const API_BASE = window.location.origin;
+        // ===== LocalStorageベース認証・データ保存機能 =====
         let currentDataId = null;
-        let authToken = localStorage.getItem('authToken');
-        let username = localStorage.getItem('username');
+        let currentUser = localStorage.getItem('currentUser') || null;
 
-        // 認証チェック
-        async function checkAuth() {
-            if (authToken) {
-                try {
-                    const response = await fetch(`${API_BASE}/api/verify`, {
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        showUserInfo(data.username);
-                    } else {
-                        showGuestInfo();
-                    }
-                } catch (error) {
-                    console.log('認証確認失敗:', error);
-                    showGuestInfo();
-                }
+        // 認証初期化
+        function checkAuth() {
+            currentUser = localStorage.getItem('currentUser');
+            
+            if (currentUser) {
+                showUserInfo(currentUser);
             } else {
-                showGuestInfo();
+                showLoginPrompt();
             }
         }
 
-        // ユーザー情報表示
-        function showUserInfo(user) {
+        // ログインプロンプト表示
+        function showLoginPrompt() {
             const userInfoDiv = document.getElementById('userInfo');
             userInfoDiv.innerHTML = `
-                <div class="user-info">
-                    <span>👤 <span class="username">${user}</span> でログイン中</span>
+                <div class="login-prompt" style="background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+                    <div style="margin-bottom: 10px;">
+                        <strong>👤 ユーザー名を入力してログイン</strong>
+                    </div>
+                    <input type="text" id="usernameInput" placeholder="ユーザー名" 
+                           style="padding: 8px; border: 2px solid #ff9800; border-radius: 5px; width: 200px; margin-right: 10px;"
+                           onkeypress="if(event.key==='Enter') loginUser()">
+                    <button onclick="loginUser()" 
+                            style="padding: 8px 20px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        ログイン
+                    </button>
+                    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                        ※ユーザー名は自由に設定できます（ブラウザに保存）
+                    </div>
                 </div>
             `;
             userInfoDiv.style.display = 'block';
-            document.getElementById('authButtons').style.display = 'block';
         }
 
-        // ゲスト情報表示
-        function showGuestInfo() {
+        // ユーザーログイン
+        function loginUser() {
+            const usernameInput = document.getElementById('usernameInput');
+            const username = usernameInput ? usernameInput.value.trim() : '';
+            
+            if (!username) {
+                showNotification('ユーザー名を入力してください', 'error');
+                return;
+            }
+            
+            localStorage.setItem('currentUser', username);
+            currentUser = username;
+            
+            // ユーザーデータの初期化
+            const userDataKey = `userData_${username}`;
+            if (!localStorage.getItem(userDataKey)) {
+                localStorage.setItem(userDataKey, JSON.stringify([]));
+            }
+            
+            showNotification(`${username} でログインしました`, 'success');
+            showUserInfo(username);
+        }
+
+        // ユーザー情報表示
+        function showUserInfo(username) {
             const userInfoDiv = document.getElementById('userInfo');
+            const userDataKey = `userData_${username}`;
+            const userData = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            
             userInfoDiv.innerHTML = `
-                <div class="guest-info">
-                    ⚠️ ゲストモード（データ保存機能は使えません）<br>
-                    <a href="login.html" style="color: #667eea; text-decoration: underline;">ログイン</a>してデータを保存できます
+                <div class="user-info" style="background: #e3f2fd; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-weight: bold; color: #1976d2;">👤 ${username}</span>
+                        <span style="color: #666; font-size: 12px; margin-left: 10px;">でログイン中</span>
+                        <span style="color: #999; font-size: 11px; margin-left: 10px;">（保存データ: ${userData.length}件）</span>
+                    </div>
+                    <button onclick="logout()" 
+                            style="padding: 6px 15px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                        ログアウト
+                    </button>
                 </div>
             `;
             userInfoDiv.style.display = 'block';
-            document.getElementById('authButtons').style.display = 'none';
         }
 
         // 通知表示
@@ -1603,20 +1632,18 @@
         }
 
         // ログアウト
-        async function logout() {
-            if (confirm('ログアウトしますか？')) {
-                try {
-                    await fetch(`${API_BASE}/api/logout`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
-                } catch (error) {
-                    console.log('ログアウトエラー:', error);
-                }
+        function logout() {
+            if (confirm('ログアウトしますか？\n※データは保存されたままです')) {
+                localStorage.removeItem('currentUser');
+                currentUser = null;
+                showNotification('ログアウトしました', 'success');
+                showLoginPrompt();
                 
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('username');
-                window.location.href = 'login.html';
+                // データリストをクリア
+                const listDiv = document.getElementById('dataList');
+                if (listDiv) {
+                    listDiv.innerHTML = '<p style="text-align: center; color: #999;">ログインしてください</p>';
+                }
             }
         }
 
@@ -1633,8 +1660,15 @@
             document.getElementById('saveModal').style.display = 'none';
         }
 
-        // サーバーに保存
+                // サーバーに保存（ユーザー別LocalStorage）
         async function saveToServer() {
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                showLoginPrompt();
+                return;
+            }
+            
             const dataName = document.getElementById('dataName').value.trim();
             
             if (!dataName) {
@@ -1645,36 +1679,32 @@
             saveCurrentMonthData();
 
             const payload = {
-                data_id: currentDataId,
+                id: currentDataId || Date.now().toString(),
                 data_name: dataName,
                 month_data: monthData,
                 current_format: currentFormat,
-                current_color_index: currentColorIndex
+                current_color_index: currentColorIndex,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
             };
 
-            try {
-                const response = await fetch(`${API_BASE}/api/save`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    currentDataId = data.data_id;
-                    showNotification('データを保存しました', 'success');
-                    closeSaveModal();
-                } else {
-                    showNotification(data.error || '保存に失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('保存エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ユーザー別LocalStorageに保存
+            const userDataKey = `userData_${currentUser}`;
+            let savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            const existingIndex = savedDataList.findIndex(d => d.id === payload.id);
+            if (existingIndex >= 0) {
+                savedDataList[existingIndex] = payload;
+            } else {
+                savedDataList.push(payload);
             }
+            localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
+            
+            currentDataId = payload.id;
+            showNotification('データを保存しました', 'success');
+            closeSaveModal();
+            
+            // ユーザー情報を更新
+            showUserInfo(currentUser);
         }
 
         // 読み込みモーダル開く
@@ -1688,24 +1718,20 @@
             document.getElementById('loadModal').style.display = 'none';
         }
 
-        // データリスト取得
+                // データリスト取得（ユーザー別LocalStorage）
         async function loadDataList() {
-            try {
-                const response = await fetch(`${API_BASE}/api/list`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    renderDataList(data.data_list);
-                } else {
-                    showNotification(data.error || 'データの取得に失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('データリスト取得エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ログインチェック
+            if (!currentUser) {
+                const listDiv = document.getElementById('dataList');
+                listDiv.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">ログインしてください</p>';
+                document.getElementById('dataCount').textContent = '0件';
+                return;
             }
+            
+            const userDataKey = `userData_${currentUser}`;
+            const savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            savedDataList.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+            renderDataList(savedDataList);
         }
 
         // データリスト描画
@@ -1822,6 +1848,8 @@
         }
 
         // データ名更新
+        // データ名更新（LocalStorageモード）
+        // データ名更新（ユーザー別LocalStorage）
         async function updateDataName() {
             const newName = document.getElementById('editDataName').value.trim();
 
@@ -1830,147 +1858,117 @@
                 return;
             }
 
-            try {
-                // データを読み込んで名前だけ変更して保存
-                const loadResponse = await fetch(`${API_BASE}/api/load/${editingDataId}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const loadData = await loadResponse.json();
-
-                if (loadResponse.ok && loadData.success) {
-                    const payload = {
-                        data_id: editingDataId,
-                        data_name: newName,
-                        month_data: loadData.month_data,
-                        current_format: loadData.current_format,
-                        current_color_index: loadData.current_color_index
-                    };
-
-                    const saveResponse = await fetch(`${API_BASE}/api/save`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const saveData = await saveResponse.json();
-
-                    if (saveResponse.ok && saveData.success) {
-                        showNotification('データ名を更新しました', 'success');
-                        closeEditModal();
-                        await loadDataList();
-                    } else {
-                        showNotification(saveData.error || '更新に失敗しました', 'error');
-                    }
-                }
-            } catch (error) {
-                console.error('更新エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                return;
             }
-        }
 
-        // データ複製
+            // ユーザー別LocalStorageから取得して更新
+            const userDataKey = `userData_${currentUser}`;
+            let savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            const dataIndex = savedDataList.findIndex(d => d.id === editingDataId);
+            
+            if (dataIndex >= 0) {
+                savedDataList[dataIndex].data_name = newName;
+                savedDataList[dataIndex].updated_at = new Date().toISOString();
+                localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
+                
+
+        // データ複製（ユーザー別LocalStorage）
         async function copyData(dataId) {
-            try {
-                const response = await fetch(`${API_BASE}/api/load/${dataId}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    const copyName = `${data.data_name} (コピー)`;
-                    const payload = {
-                        data_name: copyName,
-                        month_data: data.month_data,
-                        current_format: data.current_format,
-                        current_color_index: data.current_color_index
-                    };
-
-                    const saveResponse = await fetch(`${API_BASE}/api/save`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const saveData = await saveResponse.json();
-
-                    if (saveResponse.ok && saveData.success) {
-                        showNotification(`「${copyName}」を作成しました`, 'success');
-                        await loadDataList();
-                    } else {
-                        showNotification(saveData.error || '複製に失敗しました', 'error');
-                    }
-                }
-            } catch (error) {
-                console.error('複製エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                return;
             }
+            
+            const userDataKey = `userData_${currentUser}`;
+            const savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            const data = savedDataList.find(d => d.id === dataId);
+            
+            if (!data) {
+                showNotification('データが見つかりません', 'error');
+                return;
+            }
+
+            const copyName = `${data.data_name} (コピー)`;
+            const newData = {
+                id: Date.now().toString(),
+                data_name: copyName,
+                month_data: data.month_data,
+                current_format: data.current_format,
+                current_color_index: data.current_color_index,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+
+            savedDataList.push(newData);
+            localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
+            
+            showNotification(`「${copyName}」を作成しました`, 'success');
+            await loadDataList();
+            
+            // ユーザー情報を更新
+            showUserInfo(currentUser);
         }
 
         // サーバーから読み込み
         async function loadFromServer(dataId) {
-            try {
-                const response = await fetch(`${API_BASE}/api/load/${dataId}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    currentDataId = data.data_id;
-                    monthData = data.month_data;
-                    currentFormat = data.current_format;
-                    currentColorIndex = data.current_color_index;
-
-                    loadCurrentMonthData();
-                    renderFormatGrid();
-                    renderColorGrid();
-                    renderMonthTabs();
-                    updatePreview();
-
-                    showNotification(`「${data.data_name}」を読み込みました`, 'success');
-                    closeLoadModal();
-                } else {
-                    showNotification(data.error || '読み込みに失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('読み込みエラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                return;
             }
+            
+            const userDataKey = `userData_${currentUser}`;
+            const savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            const data = savedDataList.find(d => d.id === dataId);
+            
+            if (!data) {
+                showNotification('データが見つかりません', 'error');
+                return;
+            }
+
+            currentDataId = data.id;
+            monthData = data.month_data;
+            currentFormat = data.current_format;
+            currentColorIndex = data.current_color_index;
+
+            loadCurrentMonthData();
+            renderFormatGrid();
+            renderColorGrid();
+            renderMonthTabs();
+            updatePreview();
+
+            showNotification(`「${data.data_name}」を読み込みました`, 'success');
+            closeLoadModal();
         }
 
-        // サーバーから削除
+        // サーバーから削除（ユーザー別LocalStorage）
         async function deleteFromServer(dataId) {
             if (!confirm('このデータを削除しますか？')) {
                 return;
             }
 
-            try {
-                const response = await fetch(`${API_BASE}/api/delete/${dataId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    showNotification('データを削除しました', 'success');
-                    await loadDataList();
-                } else {
-                    showNotification(data.error || '削除に失敗しました', 'error');
-                }
-            } catch (error) {
-                console.error('削除エラー:', error);
-                showNotification('サーバーに接続できません', 'error');
+            // ログインチェック
+            if (!currentUser) {
+                showNotification('ログインしてください', 'error');
+                return;
             }
+
+            const userDataKey = `userData_${currentUser}`;
+            let savedDataList = JSON.parse(localStorage.getItem(userDataKey) || '[]');
+            savedDataList = savedDataList.filter(d => d.id !== dataId);
+            localStorage.setItem(userDataKey, JSON.stringify(savedDataList));
+
+            showNotification('データを削除しました', 'success');
+            await loadDataList();
+            
+            // ユーザー情報を更新
+            showUserInfo(currentUser);
         }
     </script>
 </body>
 </html>
+<!-- Force deploy: 1766518087 -->

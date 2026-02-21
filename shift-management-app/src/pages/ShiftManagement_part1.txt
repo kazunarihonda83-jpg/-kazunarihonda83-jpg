@@ -1,0 +1,151 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays } from 'date-fns';
+import { ChevronLeft, ChevronRight, Plus, Sparkles, Send, Trash2, Edit, X } from 'lucide-react';
+import { toast } from 'sonner';
+import useAuthStore from '../store/useAuthStore';
+import { shiftAPI, positionAPI } from '../api/config';
+
+const ShiftManagement = () => {
+  const queryClient = useQueryClient();
+  const { user, isManager } = useAuthStore();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [editingShift, setEditingShift] = useState(null);
+
+  // Form state
+  const [shiftForm, setShiftForm] = useState({
+    userId: '',
+    positionId: '',
+    shiftDate: format(new Date(), 'yyyy-MM-dd'),
+    startTime: '09:00',
+    endTime: '18:00',
+    breakMinutes: 60,
+    notes: ''
+  });
+
+  const [generateForm, setGenerateForm] = useState({
+    startDate: format(startOfWeek(addWeeks(new Date(), 1)), 'yyyy-MM-dd'),
+    endDate: format(endOfWeek(addWeeks(new Date(), 1)), 'yyyy-MM-dd')
+  });
+
+  const weekStart = format(startOfWeek(currentDate), 'yyyy-MM-dd');
+  const weekEnd = format(endOfWeek(currentDate), 'yyyy-MM-dd');
+
+  // Fetch shifts
+  const { data: shifts = [], isLoading, refetch } = useQuery({
+    queryKey: ['shifts-management', weekStart, weekEnd],
+    queryFn: async () => {
+      const { data } = await shiftAPI.getShifts({
+        storeId: 'store-main',
+        startDate: weekStart,
+        endDate: weekEnd
+      });
+      return data;
+    }
+  });
+
+  // Fetch users
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      // Mock users from shifts or add a proper API endpoint
+      const uniqueUsers = {};
+      shifts.forEach(shift => {
+        if (shift.user_id) {
+          uniqueUsers[shift.user_id] = {
+            id: shift.user_id,
+            name: shift.user_name
+          };
+        }
+      });
+      // Add default users
+      return [
+        { id: 'user-admin', name: '管理者 ユーザー' },
+        { id: 'user-manager', name: 'マネージャー 田中' },
+        { id: 'user-staff1', name: 'スタッフ 佐藤' },
+        { id: 'user-staff2', name: '花子 鈴木' },
+        { id: 'user-staff3', name: '次郎 山田' },
+        ...Object.values(uniqueUsers).filter(u => !['user-admin', 'user-manager', 'user-staff1', 'user-staff2', 'user-staff3'].includes(u.id))
+      ];
+    }
+  });
+
+  // Fetch positions
+  const { data: positions = [] } = useQuery({
+    queryKey: ['positions'],
+    queryFn: async () => {
+      const { data } = await positionAPI.getPositions({ storeId: 'store-main' });
+      return data;
+    }
+  });
+
+  // Create shift mutation
+  const createMutation = useMutation({
+    mutationFn: (data) => shiftAPI.createShift({
+      ...data,
+      storeId: 'store-main',
+      status: 'draft'
+    }),
+    onSuccess: () => {
+      toast.success('シフトを追加しました');
+      setShowAddModal(false);
+      resetForm();
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'シフトの追加に失敗しました');
+    }
+  });
+
+  // Update shift mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => shiftAPI.updateShift(id, data),
+    onSuccess: () => {
+      toast.success('シフトを更新しました');
+      setEditingShift(null);
+      resetForm();
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'シフトの更新に失敗しました');
+    }
+  });
+
+  // Delete shift mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id) => shiftAPI.deleteShift(id),
+    onSuccess: () => {
+      toast.success('シフトを削除しました');
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'シフトの削除に失敗しました');
+    }
+  });
+
+  // Generate shifts mutation
+  const generateMutation = useMutation({
+    mutationFn: (data) => shiftAPI.generateShifts(data),
+    onSuccess: (response) => {
+      toast.success(`${response.data.count}件のシフトを生成しました`);
+      setShowGenerateModal(false);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'シフト生成に失敗しました');
+    }
+  });
+
+  // Publish shifts mutation
+  const publishMutation = useMutation({
+    mutationFn: (shiftIds) => shiftAPI.publishShifts(shiftIds),
+    onSuccess: (response) => {
+      toast.success(`${response.data.count}件のシフトを公開しました`);
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.error || 'シフト公開に失敗しました');
+    }
+  });

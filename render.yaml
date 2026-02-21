@@ -1,0 +1,30 @@
+services:
+  # Frontend - Static Site
+  - type: web
+    name: shift-management-frontend
+    env: static
+    buildCommand: cd shift-management-app && npm install && npm run build
+    staticPublishPath: shift-management-app/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: VITE_API_URL
+        value: https://shift-management-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # Backend - API Server
+  - type: web
+    name: shift-management-api
+    env: node
+    buildCommand: cd shift-management-app && npm install
+    startCommand: cd shift-management-app && node server/app.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: CORS_ORIGIN
+        value: https://shift-management-frontend.onrender.com
